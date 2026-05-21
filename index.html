@@ -566,6 +566,62 @@
     </div>
 
     <!-- 彈窗3：附件上傳與管理 Modal (新增) -->
+<div id="bulkImportModal" onclick="closeBulkImportModalOutside(event)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div onclick="event.stopPropagation()" class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-2xl w-full p-6 mx-4">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 class="font-bold text-lg text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-file-import text-indigo-600"></i>
+                批次智慧生成
+            </h3>
+            <button onclick="closeBulkImportModal()" class="text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <div class="mt-4 space-y-3">
+            <p class="text-xs text-slate-500">
+                請每行輸入一項作業名稱，系統會依序建立職安危害辨識與風險評估資料。
+            </p>
+
+            <textarea
+                id="bulkTasksInput"
+                rows="10"
+                class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="例如：
+高處更換天花板 LED 燈管
+使用有機溶劑擦拭主機板線路
+使用堆高機進行貨物搬運"
+            ></textarea>
+
+            <div class="flex justify-between items-center gap-2 pt-2">
+                <button
+                    onclick="loadSampleTasks()"
+                    class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition"
+                >
+                    <i class="fa-solid fa-list-check mr-1"></i>
+                    載入範例
+                </button>
+
+                <div class="flex gap-2">
+                    <button
+                        onclick="closeBulkImportModal()"
+                        class="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-semibold transition"
+                    >
+                        取消
+                    </button>
+
+                    <button
+                        onclick="executeBulkGenerate()"
+                        class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition shadow"
+                    >
+                        <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>
+                        開始批次生成
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>     
     <div id="attachmentModal" onclick="closeAttachmentModalOutside(event)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
         <div onclick="event.stopPropagation()" class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full p-6 animate-fade-in mx-4 flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center border-b pb-3">
@@ -808,7 +864,7 @@
         let rowCounter = 0;
         let config = {
             apiKey: '',
-            model: 'gemini-1.5-flash'
+            model: 'gemini-2.5-flash-lite'
         };
         let isAdminAuthenticated = false; // 管理員登入狀態鎖定
         
@@ -849,7 +905,7 @@
                 } else {
                     config = {
                         apiKey: localStorage.getItem('osra_gemini_key') || '',
-                        model: localStorage.getItem('osra_gemini_model') || 'gemini-1.5-flash'
+                        model: localStorage.getItem('osra_gemini_model') || 'gemini-2.5-flash-lite'
                     };
                 }
 
@@ -1650,9 +1706,13 @@ async function manualSaveRecords() {
             document.getElementById('bulkImportModal').classList.remove('hidden');
         }
 
-        function closeBulkImportModal() {
-            document.getElementById('bulkImportModal').classList.add('hidden');
-        }
+function closeBulkImportModal() {
+    document.getElementById('bulkImportModal').classList.add('hidden');
+}
+
+function closeBulkImportModalOutside(event) {
+    closeBulkImportModal();
+}
 
         function loadSampleTasks() {
             const samples = [
@@ -1712,6 +1772,9 @@ async function runAiAudit() {
     const btn = document.getElementById("aiAuditBtn");
     const btnContent = document.getElementById("aiAuditBtnContent");
 
+    let auditLoadingTimer = null;
+    let auditPanelTimer = null;
+
     if (btn && btn.disabled) return;
 
     function resetAiAuditButton() {
@@ -1737,6 +1800,33 @@ async function runAiAudit() {
                 <i class="fa-solid fa-spinner fa-spin"></i>
                 <span>AI 深度稽核中...</span>
             `;
+
+            await new Promise(resolve => requestAnimationFrame(resolve));
+
+            const auditSteps = [
+                "正在分析風險矩陣...",
+                "正在檢查控制措施合理性...",
+                "正在比對職業安全衛生法規...",
+                "正在驗證控制後風險邏輯...",
+                "正在產生 AI 稽核建議..."
+            ];
+
+            let auditStepIndex = 0;
+
+            auditLoadingTimer = setInterval(() => {
+                if (!btnContent) return;
+
+                btnContent.innerHTML = `
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <span>${auditSteps[auditStepIndex]}</span>
+                `;
+
+                auditStepIndex++;
+
+                if (auditStepIndex >= auditSteps.length) {
+                    auditStepIndex = 0;
+                }
+            }, 1200);
         }
 
         const rows = document.querySelectorAll('#tableBody tr');
@@ -1751,22 +1841,95 @@ async function runAiAudit() {
             return;
         }
 
+        auditResults.innerHTML = `
+            <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-5 text-center">
+                <i class="fa-solid fa-spinner fa-spin text-3xl mb-3 text-indigo-600"></i>
+
+                <h4 class="font-bold text-sm text-indigo-900 mb-2">
+                    AI 正在執行深度風險稽核
+                </h4>
+
+                <div class="space-y-2 text-left max-w-sm mx-auto">
+                    <div id="auditStep1" class="text-xs text-indigo-700 font-semibold">
+                        <i class="fa-solid fa-circle-check text-emerald-500 mr-1"></i>
+                        讀取評估表資料
+                    </div>
+
+                    <div id="auditStep2" class="text-xs text-slate-500">
+                        <i class="fa-solid fa-spinner fa-spin mr-1"></i>
+                        分析風險矩陣中...
+                    </div>
+
+                    <div id="auditStep3" class="text-xs text-slate-400">
+                        <i class="fa-regular fa-circle mr-1"></i>
+                        檢查控制措施合理性
+                    </div>
+
+                    <div id="auditStep4" class="text-xs text-slate-400">
+                        <i class="fa-regular fa-circle mr-1"></i>
+                        比對職業安全衛生法規
+                    </div>
+
+                    <div id="auditStep5" class="text-xs text-slate-400">
+                        <i class="fa-regular fa-circle mr-1"></i>
+                        產生稽核建議
+                    </div>
+                </div>
+
+                <p class="text-[10px] text-slate-400 mt-4">
+                    請稍候，AI 正在檢查風險邏輯與控制層級...
+                </p>
+            </div>
+        `;
+
+        const auditPanelSteps = [
+            "auditStep2",
+            "auditStep3",
+            "auditStep4",
+            "auditStep5"
+        ];
+
+        let auditPanelStepIndex = 0;
+
+        auditPanelTimer = setInterval(() => {
+            const currentId = auditPanelSteps[auditPanelStepIndex];
+            const currentEl = document.getElementById(currentId);
+
+            if (currentEl) {
+                currentEl.className = "text-xs text-indigo-700 font-semibold";
+                currentEl.innerHTML = `
+                    <i class="fa-solid fa-circle-check text-emerald-500 mr-1"></i>
+                    ${currentEl.textContent.trim().replace(/中\.*$/, "")}
+                `;
+            }
+
+            auditPanelStepIndex++;
+
+            if (auditPanelStepIndex >= auditPanelSteps.length) {
+                clearInterval(auditPanelTimer);
+
+                const finalStep = document.getElementById("auditStep5");
+
+                if (finalStep) {
+                    finalStep.className = "text-xs text-emerald-700 font-bold";
+                    finalStep.innerHTML = `
+                        <i class="fa-solid fa-circle-check text-emerald-500 mr-1"></i>
+                        稽核完成
+                    `;
+                }
+            }
+        }, 900);
+
         if (!config.apiKey) {
+            await new Promise(resolve => setTimeout(resolve, 4500));
             runLocalAudit();
             return;
         }
 
         showToast("AI 雲端稽核專家正在深度分析各項次的合理性與適法性，請稍候...", "info");
 
-        auditResults.innerHTML = `
-            <div class="text-center py-8 text-indigo-500 text-xs">
-                <i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i>
-                <p class="font-bold">AI 深度稽核運算中，請稍候...</p>
-                <p class="text-[10px] text-slate-400 mt-1">正在仔細比對職業安全衛生法規與風險控制邏輯</p>
-            </div>
-        `;
-
         let assessmentData = [];
+
         rows.forEach(row => {
             const id = parseInt(row.getAttribute('data-row-id'));
             assessmentData.push(getRowData(id));
@@ -1883,10 +2046,17 @@ ${JSON.stringify(assessmentData)}`;
         showToast("AI 雲端稽核伺服器無回應，已自動切換回本地基礎稽核模式。", "error");
         runLocalAudit();
     } finally {
+        if (auditLoadingTimer) {
+            clearInterval(auditLoadingTimer);
+        }
+
+        if (auditPanelTimer) {
+            clearInterval(auditPanelTimer);
+        }
+
         resetAiAuditButton();
     }
 }
-
         function runLocalAudit() {
             showToast("本地安全稽核專家正在依據 4x4 矩陣規範掃描風險評估表...", "info");
             
@@ -2042,9 +2212,9 @@ ${JSON.stringify(assessmentData)}`;
 
             document.getElementById('stat-high-risks').innerText = highRiskCount;
 
-            const targetRate = (highRiskCount > 0) 
-                ? Math.round((safeControlsCount / highRiskCount) * 100) 
-                : (total > 0 ? 100 : 0);
+const targetRate = total > 0
+    ? Math.round((safeControlsCount / total) * 100)
+    : 0;
 
             document.getElementById('stat-safety-rate').innerText = `${targetRate}%`;
         }
