@@ -454,9 +454,36 @@
                         <span class="flex items-center gap-2">
                             <i class="fa-solid fa-clipboard-check text-slate-900"></i> AI 風險評估稽核報告
                         </span>
-                        <button onclick="runAiAudit()" class="text-xs bg-slate-900 text-white px-2 py-1 rounded hover:bg-slate-800 transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> AI 風險稽核
-                        </button>
+<button
+    id="aiAuditBtn"
+    onclick="runAiAudit()"
+    class="group relative overflow-visible
+           bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500
+           hover:from-indigo-500 hover:via-blue-500 hover:to-cyan-400
+           text-white text-sm font-semibold
+           px-4 py-2 rounded-xl
+           shadow-lg shadow-blue-500/20
+           hover:shadow-cyan-400/40
+           transition-all duration-300
+           flex items-center gap-2"
+>
+    <!-- 右上角 AI 小標籤 -->
+    <span class="absolute -top-2 -right-2
+                 bg-yellow-400 text-slate-950
+                 text-[10px] font-black
+                 px-1.5 py-0.5 rounded-full
+                 shadow-md border border-yellow-200">
+        AI
+    </span>
+
+<span id="aiAuditBtnContent" class="flex items-center gap-2">
+    <i class="fa-solid fa-shield-halved text-white"></i>
+
+    <span>
+        執行 AI 稽核
+    </span>
+</span>
+</button>
                     </div>
                     
                     <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center text-xs">
@@ -469,7 +496,7 @@
                         <div class="text-center py-8 text-slate-400">
                             <i class="fa-solid fa-shield-virus text-4xl mb-2 text-slate-300"></i>
                             <p class="text-xs">尚未執行風險稽核</p>
-                            <p class="text-[10px] text-slate-400 mt-1">請點選右上角「AI 風險稽核」啟動完整分析</p>
+                            <p class="text-[10px] text-slate-400 mt-1">請點選右上角「執行 AI 稽核」啟動完整分析</p>
                         </div>
                     </div>
                 </div>
@@ -1249,22 +1276,21 @@
         // ----------------------------------------------------
         // 手動安全儲存所有評估記錄
         // ----------------------------------------------------
-        async function manualSaveRecords() {
-            const rows = document.querySelectorAll('#tableBody tr');
-            osraData = [];
-            
-            rows.forEach(row => {
-                const id = parseInt(row.getAttribute('data-row-id'));
-                const data = getRowData(id);
-                osraData.push(data);
-            });
-            
-            syncWorkbook();
-            
-            showToast("當前分頁之評估明細已成功安全保存至本地資料庫！", "success");
-            updateDashboardStats();
-            runAiAudit();
-        }
+async function manualSaveRecords() {
+    const rows = document.querySelectorAll('#tableBody tr');
+    osraData = [];
+    
+    rows.forEach(row => {
+        const id = parseInt(row.getAttribute('data-row-id'));
+        const data = getRowData(id);
+        osraData.push(data);
+    });
+    
+    syncWorkbook();
+    
+    showToast("評估明細已成功儲存！如需檢查風險邏輯，請點選 執行 AI 稽核。", "success");
+    updateDashboardStats();
+}
 
         function reindexRows() {
             const rows = document.querySelectorAll('#tableBody tr');
@@ -1676,130 +1702,190 @@
                 }
             }
 
-            showToast(`🎉 整批生成完成！已成功建置 ${tasks.length} 筆完整風險評估明細。`, "success");
-            runAiAudit();
+showToast(`🎉 整批生成完成！已成功建置 ${tasks.length} 筆完整風險評估明細。如需檢查，請手動點選 執行 AI 稽核。`, "success");
         }
 
         // ----------------------------------------------------
         // L. AI 風險評估稽核模組 (符合上傳之 4x4 及控制原則)
         // ----------------------------------------------------
-        async function runAiAudit() {
-            const rows = document.querySelectorAll('#tableBody tr');
-            const auditResults = document.getElementById('audit-results');
-            
-            if (rows.length === 0) {
-                auditResults.innerHTML = `
-                    <div class="text-center py-6 text-slate-400 text-xs">
-                        目前表格內無任何數據，請先新增項次進行評估！
-                    </div>
-                `;
-                return;
-            }
+async function runAiAudit() {
+    const btn = document.getElementById("aiAuditBtn");
+    const btnContent = document.getElementById("aiAuditBtnContent");
 
-            // 若無 API 金鑰，則退回原本的本地基礎稽核
-            if (!config.apiKey) {
-                runLocalAudit();
-                return;
-            }
+    if (btn && btn.disabled) return;
 
-            showToast("AI 雲端稽核專家正在深度分析各項次的合理性與適法性，請稍候...", "info");
-            auditResults.innerHTML = `<div class="text-center py-8 text-indigo-500 text-xs"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><p class="font-bold">AI 深度稽核運算中，請稍候...</p><p class="text-[10px] text-slate-400 mt-1">正在仔細比對職業安全衛生法規與風險控制邏輯</p></div>`;
+    function resetAiAuditButton() {
+        if (!btn || !btnContent) return;
 
-            let assessmentData = [];
-            rows.forEach(row => {
-                const id = parseInt(row.getAttribute('data-row-id'));
-                assessmentData.push(getRowData(id));
-            });
+        btn.disabled = false;
+        btn.classList.remove("opacity-70", "cursor-not-allowed");
 
-            const prompt = `您是一位極度嚴謹的 ISO 45001 與台灣職業安全衛生法規稽核專家。
+        btnContent.innerHTML = `
+            <i class="fa-solid fa-shield-halved text-white"></i>
+            <span>執行 AI 稽核</span>
+        `;
+    }
+
+    try {
+        showToast("AI 正在進行深度風險稽核...", "info");
+
+        if (btn && btnContent) {
+            btn.disabled = true;
+            btn.classList.add("opacity-70", "cursor-not-allowed");
+
+            btnContent.innerHTML = `
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <span>AI 深度稽核中...</span>
+            `;
+        }
+
+        const rows = document.querySelectorAll('#tableBody tr');
+        const auditResults = document.getElementById('audit-results');
+
+        if (rows.length === 0) {
+            auditResults.innerHTML = `
+                <div class="text-center py-6 text-slate-400 text-xs">
+                    目前表格內無任何數據，請先新增項次進行評估！
+                </div>
+            `;
+            return;
+        }
+
+        if (!config.apiKey) {
+            runLocalAudit();
+            return;
+        }
+
+        showToast("AI 雲端稽核專家正在深度分析各項次的合理性與適法性，請稍候...", "info");
+
+        auditResults.innerHTML = `
+            <div class="text-center py-8 text-indigo-500 text-xs">
+                <i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i>
+                <p class="font-bold">AI 深度稽核運算中，請稍候...</p>
+                <p class="text-[10px] text-slate-400 mt-1">正在仔細比對職業安全衛生法規與風險控制邏輯</p>
+            </div>
+        `;
+
+        let assessmentData = [];
+        rows.forEach(row => {
+            const id = parseInt(row.getAttribute('data-row-id'));
+            assessmentData.push(getRowData(id));
+        });
+
+        const prompt = `您是一位極度嚴謹的 ISO 45001 與台灣職業安全衛生法規稽核專家。
 請對以下職業安全風險評估表(JSON格式)進行深度稽核。
-任務要求：
-1. 必須仔細驗證每個欄位內容的「合理性、合規性、完整性、真實性」。
-2. 針對每一個發現的缺失，必須明確指出：【風險與問題】、【改善建議】、【適用之相關法規】(如：職業安全衛生法、職業安全衛生設施規則等具體條款)。
-3. 若發現文字描述過於簡略、風險評估不符實務(如嚴重度過低)、控制措施無法有效降低風險、或是遺漏法定證照要求，都必須列出。
+請回傳純 JSON 陣列格式，不要包含 markdown 標記。
 
-請回傳純 JSON 陣列格式，不要包含 markdown 標記。每個物件的結構如下：
 [{
-    "rowId": "對應的項次(數字)",
-    "level": "critical" (重大缺失/高風險) 或 "warning" (一般缺失/建議),
-    "type": "稽核缺失類別 (例如：防護缺失、法規不符、嚴重度低估等)",
-    "msg": "詳細說明發現的風險與問題，具體指出不合理或不合規之處。",
-    "suggestion": "具體的改善對策與建議。",
-    "regulation": "適用的相關法規及具體條款，若無則填寫無。"
+    "rowId": "對應的項次",
+    "level": "critical 或 warning 或 success",
+    "type": "稽核缺失類別",
+    "msg": "詳細說明發現的風險與問題",
+    "suggestion": "具體改善建議",
+    "regulation": "適用法規，若無則填寫無"
 }]
 
 若完全沒有任何問題，請回傳：
-[{"rowId": "All", "level": "success", "type": "審查通過", "msg": "未發現明顯邏輯瑕疵", "suggestion": "", "regulation": ""}]
+[{
+    "rowId": "All",
+    "level": "success",
+    "type": "審查通過",
+    "msg": "未發現明顯邏輯瑕疵",
+    "suggestion": "",
+    "regulation": "無"
+}]
 
 待稽核資料：
 ${JSON.stringify(assessmentData)}`;
 
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent?key=${config.apiKey}`;
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }]
-                    })
-                });
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent?key=${config.apiKey}`;
 
-                const resData = await response.json();
-                let textResult = resData.candidates[0].content.parts[0].text;
-                textResult = textResult.replace(/```json/gi, '').replace(/```/gi, '').trim();
-                const parsedLogs = JSON.parse(textResult);
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
+            })
+        });
 
-                let warningCount = 0;
-                let htmlContent = "";
+        const resData = await response.json();
+        let textResult = resData.candidates[0].content.parts[0].text;
 
-                if (parsedLogs.length === 1 && parsedLogs[0].level === "success") {
-                    htmlContent = `
-                        <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-center">
-                            <i class="fa-solid fa-circle-check text-emerald-500 text-3xl mb-2"></i>
-                            <h4 class="font-bold text-sm text-emerald-900">審查通過！未發現明顯邏輯瑕疵</h4>
-                            <p class="text-[10px] text-emerald-700 mt-1">此 OSRA 報表之評估邏輯高度契合 ISO 45001 風險控制層級與相關職安法規規範。</p>
-                        </div>
-                    `;
-                } else {
-                    htmlContent = parsedLogs.map(log => {
-                        if (log.level !== "success") warningCount++;
-                        
-                        let borderCol = "border-amber-200 bg-amber-50 text-amber-900";
-                        let icon = "fa-triangle-exclamation text-amber-500";
-                        
-                        if (log.level === "critical") {
-                            borderCol = "border-red-200 bg-red-50 text-red-950";
-                            icon = "fa-circle-xmark text-red-600";
-                        } else if (log.level === "success") {
-                            return ''; 
-                        }
+        textResult = textResult.replace(/```json/gi, '').replace(/```/gi, '').trim();
 
-                        return `
-                            <div class="p-3 border rounded-lg ${borderCol} text-xs flex gap-2">
-                                <i class="fa-solid ${icon} text-base mt-0.5 shrink-0"></i>
-                                <div class="w-full">
-                                    <span class="font-bold uppercase tracking-wider text-[9px] bg-slate-800 text-white px-1.5 py-0.5 rounded-md inline-block mb-1">項次 ${log.rowId} | ${log.type}</span>
-                                    <div class="mt-1 space-y-2">
-                                        <p class="leading-relaxed font-medium"><span class="text-slate-800 font-bold border-b border-slate-300 pb-0.5 mb-1 inline-block">【風險與問題】</span><br>${log.msg}</p>
-                                        ${log.suggestion ? `<p class="leading-relaxed text-slate-700"><span class="text-slate-800 font-bold border-b border-slate-300 pb-0.5 mb-1 inline-block">【建議與改善】</span><br>${log.suggestion}</p>` : ''}
-                                        ${log.regulation && log.regulation !== '無' ? `<p class="leading-relaxed mt-1 text-[10px] text-indigo-700 font-bold bg-white/60 border border-indigo-100 p-1.5 rounded inline-block shadow-sm"><i class="fa-solid fa-scale-balanced mr-1"></i>${log.regulation}</p>` : ''}
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
+        const parsedLogs = JSON.parse(textResult);
+
+        let warningCount = 0;
+        let htmlContent = "";
+
+        if (parsedLogs.length === 1 && parsedLogs[0].level === "success") {
+            htmlContent = `
+                <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-center">
+                    <i class="fa-solid fa-circle-check text-emerald-500 text-3xl mb-2"></i>
+                    <h4 class="font-bold text-sm text-emerald-900">審查通過！未發現明顯邏輯瑕疵</h4>
+                    <p class="text-[10px] text-emerald-700 mt-1">此 OSRA 報表之評估邏輯高度契合 ISO 45001 風險控制層級與相關職安法規規範。</p>
+                </div>
+            `;
+        } else {
+            htmlContent = parsedLogs.map(log => {
+                if (log.level !== "success") warningCount++;
+
+                let borderCol = "border-amber-200 bg-amber-50 text-amber-900";
+                let icon = "fa-triangle-exclamation text-amber-500";
+
+                if (log.level === "critical") {
+                    borderCol = "border-red-200 bg-red-50 text-red-950";
+                    icon = "fa-circle-xmark text-red-600";
+                } else if (log.level === "success") {
+                    return "";
                 }
 
-                auditResults.innerHTML = htmlContent;
-                document.getElementById('stat-audit-warnings').innerText = warningCount;
-                showToast(`深度稽核完成！共發現 ${warningCount} 項法規或邏輯優化調整點。`, warningCount > 0 ? "warning" : "success");
-
-            } catch (err) {
-                console.error("AI 稽核 API 請求失敗：", err);
-                showToast("AI 雲端稽核伺服器無回應，已自動切換回本地基礎稽核模式。", "error");
-                runLocalAudit();
-            }
+                return `
+                    <div class="p-3 border rounded-lg ${borderCol} text-xs flex gap-2">
+                        <i class="fa-solid ${icon} text-base mt-0.5 shrink-0"></i>
+                        <div class="w-full">
+                            <span class="font-bold uppercase tracking-wider text-[9px] bg-slate-800 text-white px-1.5 py-0.5 rounded-md inline-block mb-1">
+                                項次 ${log.rowId} | ${log.type}
+                            </span>
+                            <div class="mt-1 space-y-2">
+                                <p class="leading-relaxed font-medium">
+                                    <span class="text-slate-800 font-bold border-b border-slate-300 pb-0.5 mb-1 inline-block">【風險與問題】</span><br>
+                                    ${log.msg}
+                                </p>
+                                ${log.suggestion ? `
+                                    <p class="leading-relaxed text-slate-700">
+                                        <span class="text-slate-800 font-bold border-b border-slate-300 pb-0.5 mb-1 inline-block">【建議與改善】</span><br>
+                                        ${log.suggestion}
+                                    </p>
+                                ` : ""}
+                                ${log.regulation && log.regulation !== "無" ? `
+                                    <p class="leading-relaxed mt-1 text-[10px] text-indigo-700 font-bold bg-white/60 border border-indigo-100 p-1.5 rounded inline-block shadow-sm">
+                                        <i class="fa-solid fa-scale-balanced mr-1"></i>${log.regulation}
+                                    </p>
+                                ` : ""}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
         }
+
+        auditResults.innerHTML = htmlContent;
+        document.getElementById('stat-audit-warnings').innerText = warningCount;
+
+        showToast(
+            `深度稽核完成！共發現 ${warningCount} 項法規或邏輯優化調整點。`,
+            warningCount > 0 ? "warning" : "success"
+        );
+
+    } catch (err) {
+        console.error("AI 稽核 API 請求失敗：", err);
+        showToast("AI 雲端稽核伺服器無回應，已自動切換回本地基礎稽核模式。", "error");
+        runLocalAudit();
+    } finally {
+        resetAiAuditButton();
+    }
+}
 
         function runLocalAudit() {
             showToast("本地安全稽核專家正在依據 4x4 矩陣規範掃描風險評估表...", "info");
@@ -2180,7 +2266,7 @@ ${JSON.stringify(assessmentData)}`;
                     console.error("導入數據失敗：", err);
                     showToast(`導入失敗：${err.message}`, "error");
                 } finally {
-                    event.target.value = ''; // 歸零 input file 觸發
+                    event.target.value = '';
                 }
             };
             reader.readAsText(file);
