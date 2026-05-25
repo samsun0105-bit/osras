@@ -92,6 +92,41 @@
             box-shadow: none;
         }
 
+        .system-footer {
+    width: 100%;
+    background: #0f172a;
+    text-align: center;
+    padding: 28px 0 30px 0;
+    margin-top: 60px;
+}
+
+.footer-line {
+    width: 260px;
+    height: 1px;
+    margin: 0 auto 16px auto;
+    background: linear-gradient(
+        to right,
+        transparent,
+        rgba(148, 163, 184, 0.45),
+        transparent
+    );
+}
+
+.footer-title {
+    color: #e2e8f0;
+    font-size: 14px;
+    letter-spacing: 0.22em;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.footer-dev {
+    color: #60a5fa;
+    font-size: 13px;
+    font-style: italic;
+    letter-spacing: 0.12em;
+}
+
         /* 列印專用樣式 */
         @media print {
             @page {
@@ -173,7 +208,7 @@
                     <h1 class="text-2xl font-bold tracking-wide flex items-center gap-2">
                         職業安全風險評估系統
                     </h1>
-                    <p class="text-slate-400 text-sm font-mono">Occupational Safety Risk Assessment System</p>
+                    <p class="text-slate-400 text-sm font-mono">OCCUPATIONAL SAFETY RISK ASSESSMENT SYSTEM</p>
                 </div>
             </div>
             
@@ -2642,15 +2677,16 @@ const targetRate = total > 0
             }
         }
     </script>
-        <footer class="bg-slate-100 border-t border-slate-200 p-6 mt-8">
-        <div class="max-w-6xl mx-auto text-center text-slate-500 text-xs">
-            <p class="mb-1">
-                © 2026 職業安全衛生室｜職業安全風險評估系統
-            </p>
-            <p>
-                Developed by Sam Sun
-            </p>
-        </div>
-    </footer> 
+<footer class="system-footer">
+    <div class="footer-line"></div>
+
+    <p class="footer-title">
+        © 2026 職業安全衛生室｜職業安全風險評估系統
+    </p>
+
+    <p class="footer-dev">
+        Developed by Sam Sun
+    </p>
+</footer>
 </body>
 </html>
