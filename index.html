@@ -1205,7 +1205,11 @@
                         <input type="number" id="l1-${rowId}" min="1" max="4" value="1" oninput="calculateRisk(${rowId})" class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
                     </div>
                 </td>
-                <td id="risk-r1-${rowId}" class="text-center font-bold transition-colors duration-200 font-sans">1 - 輕度風險</td>
+                <td class="p-1">
+    <input type="number" id="risk-r1-${rowId}" min="1" max="5" value="1"
+        oninput="manualRiskInput(${rowId}, 1)"
+        class="w-14 bg-white border border-slate-200 rounded text-center font-bold">
+</td>
                 
                 <!-- 5. 降低風險採取之控制措施 -->
                 <td class="p-1 bg-rose-50 relative group">
@@ -1235,7 +1239,11 @@
                         <input type="number" id="l2-${rowId}" min="1" max="4" value="1" oninput="calculateRisk(${rowId})" class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
                     </div>
                 </td>
-                <td id="risk-r2-${rowId}" class="text-center font-bold transition-colors duration-200 font-sans">1 - 輕度風險</td>
+                <td class="p-1">
+    <input type="number" id="risk-r2-${rowId}" min="1" max="5" value="1"
+        oninput="manualRiskInput(${rowId}, 2)"
+        class="w-14 bg-white border border-slate-200 rounded text-center font-bold">
+</td>
                 
                 <!-- 操作按鈕 (帶有 admin-only-cell 樣式以實現動態控制) -->
                 <td class="text-center p-1 bg-slate-50 admin-only-cell">
@@ -1306,8 +1314,17 @@
             window._tempAttachments = window._tempAttachments || {};
             window._tempAttachments[rowId] = data.attachments || [];
             updateAttachmentUI(rowId, window._tempAttachments[rowId]);
+calculateRisk(rowId);
 
-            calculateRisk(rowId);
+if (data.risk_level_1) {
+    updateRiskBadge(`risk-r1-${rowId}`, data.risk_level_1);
+}
+
+if (data.risk_level_2) {
+    updateRiskBadge(`risk-r2-${rowId}`, data.risk_level_2);
+}
+
+saveRowState(rowId);
         }
 
         function deleteRow(rowId) {
@@ -1348,12 +1365,38 @@ async function manualSaveRecords() {
     updateDashboardStats();
 }
 
-        function reindexRows() {
-            const rows = document.querySelectorAll('#tableBody tr');
-            rows.forEach((row, idx) => {
-                row.cells[0].innerText = idx + 1;
+function reindexRows() {
+    const rows = document.querySelectorAll('#tableBody tr');
+    const newData = [];
+
+    rows.forEach((row, idx) => {
+        const oldId = parseInt(row.getAttribute('data-row-id'));
+        const newId = idx + 1;
+
+        row.setAttribute('data-row-id', newId);
+        row.id = `osra-row-${newId}`;
+        row.cells[0].innerText = newId;
+
+        row.querySelectorAll('[id]').forEach(el => {
+            el.id = el.id.replace(`-${oldId}`, `-${newId}`);
+        });
+
+        row.querySelectorAll('[onchange],[oninput],[onclick]').forEach(el => {
+            ['onchange', 'oninput', 'onclick'].forEach(attr => {
+                const val = el.getAttribute(attr);
+                if (val) el.setAttribute(attr, val.replaceAll(`(${oldId})`, `(${newId})`));
             });
-        }
+        });
+
+        const data = getRowData(newId);
+        data.id = newId;
+        newData.push(data);
+    });
+
+    osraData = newData;
+    rowCounter = rows.length;
+    syncWorkbook();
+}
 
         // ----------------------------------------------------
         // F-1. 更新風險等級 Badge 樣式 (依據 4x4 矩陣設定)
@@ -1372,9 +1415,27 @@ async function manualSaveRecords() {
                                        .trim();
             
             // 重新填入基準樣式與對應風險等級樣式
-            el.className += ` text-center font-bold transition-colors duration-200 font-sans p-2 rounded ${meta.bg} ${meta.text}`;
-            el.innerText = meta.label;
-        }
+el.className += ` text-center font-bold transition-colors duration-200 font-sans p-2 rounded ${meta.bg} ${meta.text}`;
+
+if (el.tagName === 'INPUT') {
+    el.value = score;
+    el.title = meta.label;
+} else {
+    el.innerText = meta.label;
+}
+}
+
+function manualRiskInput(rowId, type) {
+    const input = document.getElementById(`risk-r${type}-${rowId}`);
+    if (!input) return;
+
+    let val = Math.min(Math.max(parseInt(input.value) || 1, 1), 5);
+    input.value = val;
+
+    updateRiskBadge(`risk-r${type}-${rowId}`, val);
+    saveRowState(rowId);
+    updateDashboardStats();
+}
 
         // ----------------------------------------------------
         // F-2. 計算風險等級 (4x4 矩陣交叉比對)
@@ -1454,12 +1515,17 @@ async function manualSaveRecords() {
                 existing_eng: getVal(`ext-eng-${rowId}`),
                 existing_admin: getVal(`ext-admin-${rowId}`),
                 existing_ppe: getVal(`ext-ppe-${rowId}`),
-                severity_1: parseInt(getVal(`s1-${rowId}`)) || 1,
-                probability_1: parseInt(getVal(`l1-${rowId}`)) || 1,
-                control_proposal: getVal(`ctrl-proposal-${rowId}`),
-                severity_2: parseInt(getVal(`s2-${rowId}`)) || 1,
-                probability_2: parseInt(getVal(`l2-${rowId}`)) || 1,
-                attachments: window._tempAttachments[rowId] || []
+severity_1: parseInt(getVal(`s1-${rowId}`)) || 1,
+probability_1: parseInt(getVal(`l1-${rowId}`)) || 1,
+risk_level_1: parseInt(getVal(`risk-r1-${rowId}`)) || 1,
+
+control_proposal: getVal(`ctrl-proposal-${rowId}`),
+
+severity_2: parseInt(getVal(`s2-${rowId}`)) || 1,
+probability_2: parseInt(getVal(`l2-${rowId}`)) || 1,
+risk_level_2: parseInt(getVal(`risk-r2-${rowId}`)) || 1,
+
+attachments: window._tempAttachments[rowId] || []
             };
         }
 
