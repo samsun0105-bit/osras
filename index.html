@@ -1156,7 +1156,7 @@
 
             tr.innerHTML = `
                 <!-- 1. 作業項次與名稱 -->
-                <td class="bg-slate-50 text-center font-bold font-mono text-slate-500">${rowId}</td>
+                <td class="bg-slate-50 text-center font-bold font-mono text-slate-500"></td>
                 <td class="p-2 relative group">
                     <div class="flex items-center gap-1">
                         <textarea id="title-${rowId}" onchange="updateRowState(${rowId})" class="w-full bg-transparent border-0 focus:ring-1 focus:ring-indigo-500 rounded p-1 text-[11px] font-medium placeholder-slate-400" placeholder="輸入作業，例如:高架起重吊掛..."></textarea>
@@ -1196,20 +1196,34 @@
                 <td class="p-1 bg-violet-50">
                     <div class="flex items-center justify-center gap-0.5">
                         <span class="text-slate-400 font-bold">S</span>
-                        <input type="number" id="s1-${rowId}" min="1" max="4" value="1" oninput="calculateRisk(${rowId})" class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
+                        <input type="number"
+inputmode="numeric"
+pattern="[1-4]*"
+id="s1-${rowId}"
+min="1"
+max="4"
+value="1"
+oninput="this.value=this.value.replace(/[^1-4]/g,'').slice(-1)"
+onchange="calculateRisk(${rowId})"
+class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
                     </div>
                 </td>
                 <td class="p-1 bg-violet-50">
                     <div class="flex items-center justify-center gap-0.5">
                         <span class="text-slate-400 font-bold">P</span>
-                        <input type="number" id="l1-${rowId}" min="1" max="4" value="1" oninput="calculateRisk(${rowId})" class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
+                        <input type="number"
+inputmode="numeric"
+pattern="[1-4]*"
+id="l1-${rowId}"
+min="1"
+max="4"
+value="1"
+oninput="this.value=this.value.replace(/[^1-4]/g,'').slice(-1)"
+onchange="calculateRisk(${rowId})"
+class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
                     </div>
                 </td>
-                <td class="p-1">
-    <input type="number" id="risk-r1-${rowId}" min="1" max="5" value="1"
-        oninput="manualRiskInput(${rowId}, 1)"
-        class="w-14 bg-white border border-slate-200 rounded text-center font-bold">
-</td>
+                <td id="risk-r1-${rowId}" class="text-center font-bold transition-colors duration-200 font-sans">1 - 輕度風險</td>
                 
                 <!-- 5. 降低風險採取之控制措施 -->
                 <td class="p-1 bg-rose-50 relative group">
@@ -1230,20 +1244,34 @@
                 <td class="p-1 bg-slate-100">
                     <div class="flex items-center justify-center gap-0.5">
                         <span class="text-slate-400 font-bold">S</span>
-                        <input type="number" id="s2-${rowId}" min="1" max="4" value="1" oninput="calculateRisk(${rowId})" class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
+                        <input type="number"
+inputmode="numeric"
+pattern="[1-4]*"
+id="s2-${rowId}"
+min="1"
+max="4"
+value="1"
+oninput="this.value=this.value.replace(/[^1-4]/g,'').slice(-1)"
+onchange="calculateRisk(${rowId})"
+class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
                     </div>
                 </td>
                 <td class="p-1 bg-slate-100">
                     <div class="flex items-center justify-center gap-0.5">
                         <span class="text-slate-400 font-bold">P</span>
-                        <input type="number" id="l2-${rowId}" min="1" max="4" value="1" oninput="calculateRisk(${rowId})" class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
+                        <input type="number"
+inputmode="numeric"
+pattern="[1-4]*"
+id="l2-${rowId}"
+min="1"
+max="4"
+value="1"
+oninput="this.value=this.value.replace(/[^1-4]/g,'').slice(-1)"
+onchange="calculateRisk(${rowId})"
+class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
                     </div>
                 </td>
-                <td class="p-1">
-    <input type="number" id="risk-r2-${rowId}" min="1" max="5" value="1"
-        oninput="manualRiskInput(${rowId}, 2)"
-        class="w-14 bg-white border border-slate-200 rounded text-center font-bold">
-</td>
+                <td id="risk-r2-${rowId}" class="text-center font-bold transition-colors duration-200 font-sans">1 - 輕度風險</td>
                 
                 <!-- 操作按鈕 (帶有 admin-only-cell 樣式以實現動態控制) -->
                 <td class="text-center p-1 bg-slate-50 admin-only-cell">
@@ -1287,8 +1315,9 @@
                 });
             }
 
-            updateDashboardStats();
-        }
+reindexRows();
+updateDashboardStats();
+}
 
         function populateRowData(rowId, data) {
             document.getElementById(`title-${rowId}`).value = data.job_title || '';
@@ -1314,17 +1343,8 @@
             window._tempAttachments = window._tempAttachments || {};
             window._tempAttachments[rowId] = data.attachments || [];
             updateAttachmentUI(rowId, window._tempAttachments[rowId]);
-calculateRisk(rowId);
 
-if (data.risk_level_1) {
-    updateRiskBadge(`risk-r1-${rowId}`, data.risk_level_1);
-}
-
-if (data.risk_level_2) {
-    updateRiskBadge(`risk-r2-${rowId}`, data.risk_level_2);
-}
-
-saveRowState(rowId);
+            calculateRisk(rowId);
         }
 
         function deleteRow(rowId) {
@@ -1365,38 +1385,12 @@ async function manualSaveRecords() {
     updateDashboardStats();
 }
 
-function reindexRows() {
-    const rows = document.querySelectorAll('#tableBody tr');
-    const newData = [];
-
-    rows.forEach((row, idx) => {
-        const oldId = parseInt(row.getAttribute('data-row-id'));
-        const newId = idx + 1;
-
-        row.setAttribute('data-row-id', newId);
-        row.id = `osra-row-${newId}`;
-        row.cells[0].innerText = newId;
-
-        row.querySelectorAll('[id]').forEach(el => {
-            el.id = el.id.replace(`-${oldId}`, `-${newId}`);
-        });
-
-        row.querySelectorAll('[onchange],[oninput],[onclick]').forEach(el => {
-            ['onchange', 'oninput', 'onclick'].forEach(attr => {
-                const val = el.getAttribute(attr);
-                if (val) el.setAttribute(attr, val.replaceAll(`(${oldId})`, `(${newId})`));
+        function reindexRows() {
+            const rows = document.querySelectorAll('#tableBody tr');
+            rows.forEach((row, idx) => {
+                row.cells[0].innerText = idx + 1;
             });
-        });
-
-        const data = getRowData(newId);
-        data.id = newId;
-        newData.push(data);
-    });
-
-    osraData = newData;
-    rowCounter = rows.length;
-    syncWorkbook();
-}
+        }
 
         // ----------------------------------------------------
         // F-1. 更新風險等級 Badge 樣式 (依據 4x4 矩陣設定)
@@ -1415,27 +1409,9 @@ function reindexRows() {
                                        .trim();
             
             // 重新填入基準樣式與對應風險等級樣式
-el.className += ` text-center font-bold transition-colors duration-200 font-sans p-2 rounded ${meta.bg} ${meta.text}`;
-
-if (el.tagName === 'INPUT') {
-    el.value = score;
-    el.title = meta.label;
-} else {
-    el.innerText = meta.label;
-}
-}
-
-function manualRiskInput(rowId, type) {
-    const input = document.getElementById(`risk-r${type}-${rowId}`);
-    if (!input) return;
-
-    let val = Math.min(Math.max(parseInt(input.value) || 1, 1), 5);
-    input.value = val;
-
-    updateRiskBadge(`risk-r${type}-${rowId}`, val);
-    saveRowState(rowId);
-    updateDashboardStats();
-}
+            el.className += ` text-center font-bold transition-colors duration-200 font-sans p-2 rounded ${meta.bg} ${meta.text}`;
+            el.innerText = meta.label;
+        }
 
         // ----------------------------------------------------
         // F-2. 計算風險等級 (4x4 矩陣交叉比對)
@@ -1459,11 +1435,6 @@ function manualRiskInput(rowId, type) {
 
             updateRiskBadge(`risk-r1-${rowId}`, r1);
             updateRiskBadge(`risk-r2-${rowId}`, r2);
-
-            const ctrlProposalBox = document.getElementById(`ctrl-proposal-${rowId}`);
-            if (r1 >= 4 && ctrlProposalBox && !ctrlProposalBox.value) {
-                showToast(`偵測到項次 ${rowId} 初始評估屬於不接受風險（${r1 === 5 ? "重大風險" : "高度風險"}）！請點擊 🛡️ 防護盾獲得 AI 智慧防護建議。`, 'warning');
-            }
 
             saveRowState(rowId);
             updateDashboardStats();
@@ -1515,17 +1486,12 @@ function manualRiskInput(rowId, type) {
                 existing_eng: getVal(`ext-eng-${rowId}`),
                 existing_admin: getVal(`ext-admin-${rowId}`),
                 existing_ppe: getVal(`ext-ppe-${rowId}`),
-severity_1: parseInt(getVal(`s1-${rowId}`)) || 1,
-probability_1: parseInt(getVal(`l1-${rowId}`)) || 1,
-risk_level_1: parseInt(getVal(`risk-r1-${rowId}`)) || 1,
-
-control_proposal: getVal(`ctrl-proposal-${rowId}`),
-
-severity_2: parseInt(getVal(`s2-${rowId}`)) || 1,
-probability_2: parseInt(getVal(`l2-${rowId}`)) || 1,
-risk_level_2: parseInt(getVal(`risk-r2-${rowId}`)) || 1,
-
-attachments: window._tempAttachments[rowId] || []
+                severity_1: parseInt(getVal(`s1-${rowId}`)) || 1,
+                probability_1: parseInt(getVal(`l1-${rowId}`)) || 1,
+                control_proposal: getVal(`ctrl-proposal-${rowId}`),
+                severity_2: parseInt(getVal(`s2-${rowId}`)) || 1,
+                probability_2: parseInt(getVal(`l2-${rowId}`)) || 1,
+                attachments: window._tempAttachments[rowId] || []
             };
         }
 
