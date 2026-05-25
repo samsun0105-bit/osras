@@ -934,10 +934,10 @@
 
                 if (osraData.length > 0) {
                     showToast("已成功從 IndexedDB 資料庫還原歷史數據！", "success");
-                } else {
-                    // 空資料庫時，預設建立 1 列空白資料表供填寫
-                    addNewRow();
-                }
+} else {
+    // 空資料庫時不自動建立空白列
+    updateDashboardStats();
+}
             } catch (err) {
                 console.error("IndexedDB 初始化失敗，回退至內建常態機制：", err);
                 switchTab('sheet_default', true);
@@ -1202,7 +1202,7 @@ pattern="[1-4]*"
 id="s1-${rowId}"
 min="1"
 max="4"
-value="1"
+value=""
 oninput="this.value=this.value.replace(/[^1-4]/g,'').slice(-1)"
 onchange="calculateRisk(${rowId})"
 class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
@@ -1217,13 +1217,13 @@ pattern="[1-4]*"
 id="l1-${rowId}"
 min="1"
 max="4"
-value="1"
+value=""
 oninput="this.value=this.value.replace(/[^1-4]/g,'').slice(-1)"
 onchange="calculateRisk(${rowId})"
 class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
                     </div>
                 </td>
-                <td id="risk-r1-${rowId}" class="text-center font-bold transition-colors duration-200 font-sans">1 - 輕度風險</td>
+                <td id="risk-r1-${rowId}" class="text-center font-bold transition-colors duration-200 font-sans"></td>
                 
                 <!-- 5. 降低風險採取之控制措施 -->
                 <td class="p-1 bg-rose-50 relative group">
@@ -1250,7 +1250,7 @@ pattern="[1-4]*"
 id="s2-${rowId}"
 min="1"
 max="4"
-value="1"
+value=""
 oninput="this.value=this.value.replace(/[^1-4]/g,'').slice(-1)"
 onchange="calculateRisk(${rowId})"
 class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
@@ -1265,13 +1265,13 @@ pattern="[1-4]*"
 id="l2-${rowId}"
 min="1"
 max="4"
-value="1"
+value=""
 oninput="this.value=this.value.replace(/[^1-4]/g,'').slice(-1)"
 onchange="calculateRisk(${rowId})"
 class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
                     </div>
                 </td>
-                <td id="risk-r2-${rowId}" class="text-center font-bold transition-colors duration-200 font-sans">1 - 輕度風險</td>
+                <td id="risk-r2-${rowId}" class="text-center font-bold transition-colors duration-200 font-sans"></td>
                 
                 <!-- 操作按鈕 (帶有 admin-only-cell 樣式以實現動態控制) -->
                 <td class="text-center p-1 bg-slate-50 admin-only-cell">
@@ -1321,7 +1321,7 @@ updateDashboardStats();
 
         function populateRowData(rowId, data) {
             document.getElementById(`title-${rowId}`).value = data.job_title || '';
-            document.getElementById(`cycle-${rowId}`).value = data.cycle || '經常性';
+            document.getElementById(`cycle-${rowId}`).value = data.cycle || '';
             document.getElementById(`env-${rowId}`).value = data.environment || '';
             document.getElementById(`mach-${rowId}`).value = data.machinery || '';
             document.getElementById(`chem-${rowId}`).value = data.chemical || '';
@@ -1416,29 +1416,34 @@ async function manualSaveRecords() {
         // ----------------------------------------------------
         // F-2. 計算風險等級 (4x4 矩陣交叉比對)
         // ----------------------------------------------------
-        function calculateRisk(rowId) {
-            const limit = (v) => Math.min(Math.max(parseInt(v) || 1, 1), 4);
-            
-            const s1 = limit(document.getElementById(`s1-${rowId}`).value);
-            const p1 = limit(document.getElementById(`l1-${rowId}`).value);
-            document.getElementById(`s1-${rowId}`).value = s1;
-            document.getElementById(`l1-${rowId}`).value = p1;
-            
-            const r1 = RISK_MATRIX[s1 - 1][p1 - 1];
+function calculateRisk(rowId) {
+    const s1Input = document.getElementById(`s1-${rowId}`);
+    const p1Input = document.getElementById(`l1-${rowId}`);
+    const s2Input = document.getElementById(`s2-${rowId}`);
+    const p2Input = document.getElementById(`l2-${rowId}`);
 
-            const s2 = limit(document.getElementById(`s2-${rowId}`).value);
-            const p2 = limit(document.getElementById(`l2-${rowId}`).value);
-            document.getElementById(`s2-${rowId}`).value = s2;
-            document.getElementById(`l2-${rowId}`).value = p2;
+    const s1 = parseInt(s1Input.value);
+    const p1 = parseInt(p1Input.value);
+    const s2 = parseInt(s2Input.value);
+    const p2 = parseInt(p2Input.value);
 
-            const r2 = RISK_MATRIX[s2 - 1][p2 - 1];
+    if (!s1 || !p1) {
+        document.getElementById(`risk-r1-${rowId}`).innerText = "";
+    } else {
+        const r1 = RISK_MATRIX[s1 - 1][p1 - 1];
+        updateRiskBadge(`risk-r1-${rowId}`, r1);
+    }
 
-            updateRiskBadge(`risk-r1-${rowId}`, r1);
-            updateRiskBadge(`risk-r2-${rowId}`, r2);
+    if (!s2 || !p2) {
+        document.getElementById(`risk-r2-${rowId}`).innerText = "";
+    } else {
+        const r2 = RISK_MATRIX[s2 - 1][p2 - 1];
+        updateRiskBadge(`risk-r2-${rowId}`, r2);
+    }
 
-            saveRowState(rowId);
-            updateDashboardStats();
-        }
+    saveRowState(rowId);
+    updateDashboardStats();
+}
 
         // ----------------------------------------------------
         // G. 資料持久與同步 (IndexedDB Auto Sync)
