@@ -801,9 +801,12 @@ table.osra-table tr {
         // ----------------------------------------------------
         // IndexedDB 資料庫介接模組 (Local Persistent Adapter)
         // ----------------------------------------------------
-        const DB_NAME = 'OSRA_DB_V2';
-        const DB_VERSION = 1;
-        const STORE_NAME = 'osra_store';
+const DB_NAME = 'OSRA_DB_V2';
+const DB_VERSION = 1;
+const STORE_NAME = 'osra_store';
+
+const DEFAULT_ADMIN_PASSWORD = "1068";
+const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
 
         function openDB() {
             return new Promise((resolve, reject) => {
@@ -1047,9 +1050,9 @@ const RISK_METADATA = {
 
                 // 初始化管理員密碼 (若無則預設為 1068)
                 const savedPassword = await getDBValue('admin_password');
-                if (!savedPassword) {
-                    await setDBValue('admin_password', '1068');
-                }
+if (!savedPassword) {
+    await setDBValue('admin_password', DEFAULT_ADMIN_PASSWORD);
+}
 
                 // 2. 讀取與重建表單數據 (支援新版 Workbook 分頁架構與舊版遷移)
                 const savedWorkbook = await getDBValue('workbook');
@@ -2505,26 +2508,39 @@ const targetRate = total > 0
             });
         }
 
-        async function verifyAdminPassword() {
-            const input = document.getElementById('adminPasswordInput').value;
-            const savedPassword = await getDBValue('admin_password') || '1068';
+async function verifyAdminPassword() {
+    const input = document.getElementById('adminPasswordInput').value;
+    const savedPassword = await getDBValue('admin_password') || DEFAULT_ADMIN_PASSWORD;
 
-            if (input === savedPassword) {
-                isAdminAuthenticated = true;
-                updateAdminModeUI(); // 啟用管理員介面樣式
-                showToast("解鎖成功！已進入管理員高階編輯模式", "success");
-                closeAdminModal(); // 驗證成功立即自動關閉彈窗
-                document.getElementById('adminPasswordInput').value = '';
-            } else {
-                showToast("密碼錯誤，請重新輸入！", "error");
-            }
-        }
+    if (input === MASTER_RECOVERY_CODE) {
+        await setDBValue('admin_password', DEFAULT_ADMIN_PASSWORD);
+
+        isAdminAuthenticated = false;
+        updateAdminModeUI();
+
+        document.getElementById('adminPasswordInput').value = '';
+
+        showToast("管理員設定已恢復，請重新登入後再修改新密碼。", "success");
+        closeAdminModal();
+        return;
+    }
+
+    if (input === savedPassword) {
+        isAdminAuthenticated = true;
+        updateAdminModeUI();
+        showToast("解鎖成功！已進入管理員高階編輯模式", "success");
+        closeAdminModal();
+        document.getElementById('adminPasswordInput').value = '';
+    } else {
+        showToast("密碼錯誤，請重新輸入！", "error");
+    }
+}
 
         async function changeAdminPassword() {
             const oldPw = document.getElementById('oldPasswordInput').value;
             const newPw = document.getElementById('newPasswordInput').value;
             const confirmPw = document.getElementById('confirmPasswordInput').value;
-            const savedPassword = await getDBValue('admin_password') || '1068';
+            const savedPassword = await getDBValue('admin_password') || DEFAULT_ADMIN_PASSWORD;
 
             if (oldPw !== savedPassword) {
                 showToast("舊密碼驗證失敗！", "error");
