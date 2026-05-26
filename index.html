@@ -2581,7 +2581,7 @@ async function verifyAdminPassword() {
             const blob = new Blob([JSON.stringify(workbook, null, 2)], { type: 'application/json' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `OSRA_AI_Risk_Assessment_${new Date().toISOString().slice(0,10)}.json`;
+            a.download = `職業安全風險評估系統_OSRAS_${new Date().toISOString().slice(0,10)}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
