@@ -389,19 +389,42 @@ table.osra-table tr {
                                 <tr class="text-slate-800 text-xs">
                                     <th colspan="2" class="py-2 px-3 font-bold text-center bg-slate-100">公司名稱</th>
                                     <th colspan="3" class="py-2 px-3 font-normal bg-white">
-                                        <input type="text" class="w-full bg-transparent outline-none placeholder-slate-400" placeholder="輸入公司名稱">
+                                        <input
+    type="text"
+    id="meta-company-name"
+    onchange="updateSheetMetaState()"
+    class="w-full bg-transparent outline-none placeholder-slate-400"
+    placeholder="輸入公司名稱"
+>
                                     </th>
                                     <th colspan="2" class="py-2 px-3 font-bold text-center bg-slate-100">部門名稱</th>
                                     <th colspan="3" class="py-2 px-3 font-normal bg-white">
-                                        <input type="text" class="w-full bg-transparent outline-none placeholder-slate-400" placeholder="輸入部門名稱">
+                                        <input
+    type="text"
+    id="meta-department-name"
+    onchange="updateSheetMetaState()"
+    class="w-full bg-transparent outline-none placeholder-slate-400"
+    placeholder="輸入部門名稱"
+>
                                     </th>
                                     <th colspan="2" class="py-2 px-3 font-bold text-center bg-slate-100">評估人員</th>
                                     <th colspan="3" class="py-2 px-3 font-normal bg-white">
-                                        <input type="text" class="w-full bg-transparent outline-none placeholder-slate-400" placeholder="輸入姓名">
+                                        <input
+    type="text"
+    id="meta-evaluator"
+    onchange="updateSheetMetaState()"
+    class="w-full bg-transparent outline-none placeholder-slate-400"
+    placeholder="輸入姓名"
+>
                                     </th>
                                     <th colspan="2" class="py-2 px-3 font-bold text-center bg-slate-100">評估日期</th>
                                     <th colspan="3" class="py-2 px-3 font-normal bg-white">
-                                        <input type="date" class="w-full bg-transparent outline-none text-slate-700">
+                                        <input
+    type="date"
+    id="meta-assessment-date"
+    onchange="updateSheetMetaState()"
+    class="w-full bg-transparent outline-none text-slate-700"
+>
                                     </th>
                                 </tr>
                                 <!-- 第一層分類 -->
@@ -452,15 +475,33 @@ table.osra-table tr {
                                 <tr class="text-slate-800 text-xs">
                                     <td colspan="2" class="py-2 px-3 font-bold text-center bg-slate-100">填表人</td>
                                     <td colspan="4" class="py-2 px-3 font-normal bg-white">
-                                        <input type="text" class="w-full bg-transparent outline-none placeholder-slate-400" placeholder="填表人簽章">
+                                        <input
+    type="text"
+    id="meta-prepared-by"
+    onchange="updateSheetMetaState()"
+    class="w-full bg-transparent outline-none placeholder-slate-400"
+    placeholder="填表人簽章"
+>
                                     </td>
                                     <td colspan="2" class="py-2 px-3 font-bold text-center bg-slate-100">單位主管</td>
                                     <td colspan="5" class="py-2 px-3 font-normal bg-white">
-                                        <input type="text" class="w-full bg-transparent outline-none placeholder-slate-400" placeholder="主管簽章">
+                                        <input
+    type="text"
+    id="meta-supervisor"
+    onchange="updateSheetMetaState()"
+    class="w-full bg-transparent outline-none placeholder-slate-400"
+    placeholder="主管簽章"
+>
                                     </td>
                                     <td colspan="2" class="py-2 px-3 font-bold text-center bg-slate-100">編號</td>
                                     <td colspan="5" class="py-2 px-3 font-normal bg-white">
-                                        <input type="text" class="w-full bg-transparent outline-none placeholder-slate-400" placeholder="例如: OSRA-2026-001">
+                                        <input
+    type="text"
+    id="meta-document-no"
+    onchange="updateSheetMetaState()"
+    class="w-full bg-transparent outline-none placeholder-slate-400"
+    placeholder="例如: OSRA-2026-001"
+>
                                     </td>
                                 </tr>
                             </tfoot>
@@ -966,15 +1007,104 @@ const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
             }
         ];
 
+// ----------------------------------------------------
+// B-0. 每分頁表頭 / 表尾資料管理
+// ----------------------------------------------------
+function createEmptySheetMeta() {
+    return {
+        companyName: '',
+        departmentName: '',
+        evaluator: '',
+        assessmentDate: '',
+        preparedBy: '',
+        supervisor: '',
+        documentNo: ''
+    };
+}
+
+const SHEET_META_FIELDS = [
+    { key: 'companyName', id: 'meta-company-name' },
+    { key: 'departmentName', id: 'meta-department-name' },
+    { key: 'evaluator', id: 'meta-evaluator' },
+    { key: 'assessmentDate', id: 'meta-assessment-date' },
+    { key: 'preparedBy', id: 'meta-prepared-by' },
+    { key: 'supervisor', id: 'meta-supervisor' },
+    { key: 'documentNo', id: 'meta-document-no' }
+];
+
+function getActiveSheet() {
+    return workbook.sheets.find(s => s.id === workbook.activeSheetId);
+}
+
+function normalizeSheet(sheet) {
+    if (!sheet) return;
+
+    if (!sheet.meta) {
+        sheet.meta = createEmptySheetMeta();
+    }
+
+    if (!Array.isArray(sheet.data)) {
+        sheet.data = [];
+    }
+
+    if (typeof sheet.rowCounter !== 'number') {
+        sheet.rowCounter = 0;
+    }
+}
+
+function getSheetMetaFromForm() {
+    const meta = createEmptySheetMeta();
+
+    SHEET_META_FIELDS.forEach(field => {
+        const el = document.getElementById(field.id);
+        meta[field.key] = el ? el.value : '';
+    });
+
+    return meta;
+}
+
+function setSheetMetaToForm(meta = {}) {
+    const safeMeta = {
+        ...createEmptySheetMeta(),
+        ...meta
+    };
+
+    SHEET_META_FIELDS.forEach(field => {
+        const el = document.getElementById(field.id);
+        if (el) {
+            el.value = safeMeta[field.key] || '';
+        }
+    });
+}
+
+function saveSheetMetaToActiveSheet() {
+    const sheet = getActiveSheet();
+    if (!sheet) return;
+
+    normalizeSheet(sheet);
+    sheet.meta = getSheetMetaFromForm();
+}
+
+function updateSheetMetaState() {
+    saveSheetMetaToActiveSheet();
+    syncWorkbook();
+}
+
         // ----------------------------------------------------
         // B. 狀態管理 (State Management)
         // ----------------------------------------------------
-        let workbook = {
-            activeSheetId: 'sheet_default',
-            sheets: [
-                { id: 'sheet_default', name: '預設評估表', data: [], rowCounter: 0 }
-            ]
-        };
+let workbook = {
+    activeSheetId: 'sheet_default',
+    sheets: [
+        {
+            id: 'sheet_default',
+            name: '預設評估表',
+            meta: createEmptySheetMeta(),
+            data: [],
+            rowCounter: 0
+        }
+    ]
+};
         let osraData = [];
         let rowCounter = 0;
         let config = {
@@ -983,14 +1113,18 @@ const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
         };
         let isAdminAuthenticated = false; // 管理員登入狀態鎖定
         
-        function syncWorkbook() {
-            const sheet = workbook.sheets.find(s => s.id === workbook.activeSheetId);
-            if(sheet) {
-                sheet.data = JSON.parse(JSON.stringify(osraData));
-                sheet.rowCounter = rowCounter;
-            }
-            setDBValue('workbook', workbook);
-        }
+function syncWorkbook() {
+    const sheet = getActiveSheet();
+
+    if (sheet) {
+        normalizeSheet(sheet);
+        sheet.meta = getSheetMetaFromForm();
+        sheet.data = JSON.parse(JSON.stringify(osraData));
+        sheet.rowCounter = rowCounter;
+    }
+
+    setDBValue('workbook', workbook);
+}
 
         // 4x4 風險判定矩陣定義
         const RISK_MATRIX = [
@@ -1059,13 +1193,18 @@ if (!savedPassword) {
                 const savedCounter = await getDBValue('row_counter');
                 const savedData = await getDBValue('assessment_rows');
 
-                if (savedWorkbook) {
-                    workbook = savedWorkbook;
-                } else if (savedData && savedData.length > 0) {
+if (savedWorkbook) {
+    workbook = savedWorkbook;
+
+    workbook.sheets.forEach(sheet => {
+        normalizeSheet(sheet);
+    });
+} else if (savedData && savedData.length > 0) {
                     // 舊版資料遷移至新分頁架構
-                    workbook.sheets[0].data = savedData;
-                    workbook.sheets[0].rowCounter = savedCounter || 0;
-                    await setDBValue('workbook', workbook);
+workbook.sheets[0].meta = createEmptySheetMeta();
+workbook.sheets[0].data = savedData;
+workbook.sheets[0].rowCounter = savedCounter || 0;
+await setDBValue('workbook', workbook);
                 }
 
                 // 執行分頁切換與載入
@@ -1210,12 +1349,16 @@ if (!savedPassword) {
         function switchTab(sheetId, initialLoad = false) {
             if (!initialLoad) syncWorkbook();
 
-            const targetSheet = workbook.sheets.find(s => s.id === sheetId);
-            if (!targetSheet) return;
+const targetSheet = workbook.sheets.find(s => s.id === sheetId);
+if (!targetSheet) return;
 
-            workbook.activeSheetId = sheetId;
-            osraData = JSON.parse(JSON.stringify(targetSheet.data));
-            rowCounter = targetSheet.rowCounter;
+normalizeSheet(targetSheet);
+
+workbook.activeSheetId = sheetId;
+setSheetMetaToForm(targetSheet.meta);
+
+osraData = JSON.parse(JSON.stringify(targetSheet.data));
+rowCounter = targetSheet.rowCounter;
 
             document.getElementById('tableBody').innerHTML = '';
             
@@ -1237,12 +1380,13 @@ if (!savedPassword) {
             if (!name || name.trim() === "") return;
 
             const newId = 'sheet_' + Date.now();
-            workbook.sheets.push({
-                id: newId,
-                name: name.trim(),
-                data: [],
-                rowCounter: 0
-            });
+workbook.sheets.push({
+    id: newId,
+    name: name.trim(),
+    meta: createEmptySheetMeta(),
+    data: [],
+    rowCounter: 0
+});
             
             switchTab(newId);
             showToast(`已成功新增分頁「${name.trim()}」`, "success");
@@ -1512,13 +1656,14 @@ async function manualSaveRecords() {
     const rows = document.querySelectorAll('#tableBody tr');
     osraData = [];
     
-    rows.forEach(row => {
-        const id = parseInt(row.getAttribute('data-row-id'));
-        const data = getRowData(id);
-        osraData.push(data);
-    });
-    
-    syncWorkbook();
+rows.forEach(row => {
+    const id = parseInt(row.getAttribute('data-row-id'));
+    const data = getRowData(id);
+    osraData.push(data);
+});
+
+saveSheetMetaToActiveSheet();
+syncWorkbook();
     
     showToast("評估明細已成功儲存！如需檢查風險邏輯，請點選 執行 AI 稽核。", "success");
     updateDashboardStats();
@@ -2627,16 +2772,26 @@ async function verifyAdminPassword() {
                         if (importedData.length > 0 && (!importedData[0].hasOwnProperty('job_title') || !importedData[0].hasOwnProperty('id'))) {
                             throw new Error("此檔案不是合法的 OSRA 評估數據格式。");
                         }
-                        workbook = {
-                            activeSheetId: 'sheet_imported',
-                            sheets: [
-                                { id: 'sheet_imported', name: '導入備份資料', data: importedData, rowCounter: Math.max(...importedData.map(d=>d.id), 0) }
-                            ]
-                        };
-                    } else if (importedData.sheets && importedData.activeSheetId) {
-                        // 新版 Workbook 格式
-                        workbook = importedData;
-                    } else {
+workbook = {
+    activeSheetId: 'sheet_imported',
+    sheets: [
+        {
+            id: 'sheet_imported',
+            name: '導入備份資料',
+            meta: createEmptySheetMeta(),
+            data: importedData,
+            rowCounter: Math.max(...importedData.map(d => d.id), 0)
+        }
+    ]
+};
+} else if (importedData.sheets && importedData.activeSheetId) {
+    // 新版 Workbook 格式
+    workbook = importedData;
+
+    workbook.sheets.forEach(sheet => {
+        normalizeSheet(sheet);
+    });
+} else {
                         throw new Error("導入的檔案格式不正確。");
                     }
                     
