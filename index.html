@@ -1531,6 +1531,14 @@ async function manualSaveRecords() {
             });
         }
 
+function getDisplayItemNo(rowId) {
+    const row = document.querySelector(`#tableBody tr[data-row-id="${rowId}"]`);
+    if (!row) return rowId;
+
+    const displayNo = row.cells[0]?.innerText?.trim();
+    return displayNo || rowId;
+}        
+
         // ----------------------------------------------------
         // F-1. 更新風險等級 Badge 樣式 (依據 4x4 矩陣設定)
         // ----------------------------------------------------
@@ -2104,22 +2112,32 @@ async function runAiAudit() {
 
         showToast("AI 雲端稽核專家正在深度分析各項次的合理性與適法性，請稍候...", "info");
 
-        let assessmentData = [];
+let assessmentData = [];
 
-        rows.forEach(row => {
-            const id = parseInt(row.getAttribute('data-row-id'));
-            assessmentData.push(getRowData(id));
-        });
+rows.forEach((row, index) => {
+    const id = parseInt(row.getAttribute('data-row-id'));
+    const data = getRowData(id);
+
+    assessmentData.push({
+        ...data,
+
+        // 給 AI 報告使用的正式畫面項次
+        rowId: index + 1,
+
+        // 保留內部 ID 僅供除錯，不要求 AI 顯示
+        internalRowId: id
+    });
+});
 
         const prompt = `您是一位極度嚴謹的 ISO 45001 與台灣職業安全衛生法規稽核專家。
 請對以下職業安全風險評估表(JSON格式)進行深度稽核。
 請回傳純 JSON 陣列格式，不要包含 markdown 標記。
 
 [{
-    "rowId": "對應的項次",
+    "rowId": "請務必使用資料中的 rowId，也就是畫面表格左側顯示的項次；不可使用 internalRowId",
     "level": "critical 或 warning 或 success",
     "type": "稽核缺失類別",
-    "msg": "詳細說明發現的風險與問題",
+    "msg": "詳細說明發現的風險與問題，若提到項次，也必須使用 rowId，不可使用 internalRowId",
     "suggestion": "具體改善建議",
     "regulation": "適用法規，若無則填寫無"
 }]
@@ -2133,6 +2151,11 @@ async function runAiAudit() {
     "suggestion": "",
     "regulation": "無"
 }]
+
+請注意：
+- rowId 是畫面表格左側顯示的正式項次。
+- internalRowId 是系統內部資料列 ID，只供系統追蹤，不可出現在稽核報告中。
+- 回覆中的「項次」一律以 rowId 為準。
 
 待稽核資料：
 ${JSON.stringify(assessmentData)}`;
@@ -2184,7 +2207,7 @@ ${JSON.stringify(assessmentData)}`;
                         <i class="fa-solid ${icon} text-base mt-0.5 shrink-0"></i>
                         <div class="w-full">
                             <span class="font-bold uppercase tracking-wider text-[9px] bg-slate-800 text-white px-1.5 py-0.5 rounded-md inline-block mb-1">
-                                項次 ${log.rowId} | ${log.type}
+                                項次 ${log.rowId || "-"} | ${log.type}
                             </span>
                             <div class="mt-1 space-y-2">
                                 <p class="leading-relaxed font-medium">
@@ -2242,16 +2265,17 @@ ${JSON.stringify(assessmentData)}`;
             let auditLogs = [];
             let warningCount = 0;
 
-            rows.forEach((row) => {
-                const rowId = row.getAttribute('data-row-id');
-                const title = document.getElementById(`title-${rowId}`).value.trim();
+rows.forEach((row) => {
+    const rowId = row.getAttribute('data-row-id');
+    const displayItemNo = getDisplayItemNo(rowId);
+    const title = document.getElementById(`title-${rowId}`).value.trim();
                 
                 if (!title) {
                     auditLogs.push({
                         rowId: rowId,
                         level: "error",
                         type: "欄位缺失",
-                        msg: `項次 ${rowId}：【作業名稱】為空白，無法實施危害辨識稽核。`
+                        msg: `項次 ${displayItemNo}：【作業名稱】為空白，無法實施危害辨識稽核。`
                     });
                     warningCount++;
                     return;
@@ -2273,7 +2297,7 @@ ${JSON.stringify(assessmentData)}`;
                         rowId: rowId,
                         level: "critical",
                         type: "防護缺失",
-                        msg: `項次 ${rowId} (不可接受風險)：初始風險為「${r1 === 5 ? "5-重大風險" : "4-高度風險"}」，卻「未填寫」任何改善防護措施！在風險降低前不應開始或繼續作業。`
+                        msg: `項次 ${displayItemNo} (不可接受風險)：初始風險為「${r1 === 5 ? "5-重大風險" : "4-高度風險"}」，卻「未填寫」任何改善防護措施！在風險降低前不應開始或繼續作業。`
                     });
                     warningCount++;
                 }
@@ -2288,7 +2312,7 @@ ${JSON.stringify(assessmentData)}`;
                             rowId: rowId,
                             level: "critical",
                             type: "控制層級邏輯矛盾",
-                            msg: `項次 ${rowId}：初始風險為 ${r1} (不接受風險)，改善對策僅偏重於個人防護具(PPE)或文字描述不足，複評卻直接降為 ${r2} (低度風險/輕度風險)。「不符合優先採取工程改善」原則。`
+                            msg: `項次 ${displayItemNo}：初始風險為 ${r1} (不接受風險)，改善對策僅偏重於個人防護具(PPE)或文字描述不足，複評卻直接降為 ${r2} (低度風險/輕度風險)。「不符合優先採取工程改善」原則。`
                         });
                         warningCount++;
                     }
@@ -2302,7 +2326,7 @@ ${JSON.stringify(assessmentData)}`;
                         rowId: rowId,
                         level: "warning",
                         type: "法規證照漏未標示",
-                        msg: `項次 ${rowId}：涉及特種高危作業，但未勾選「法定資格證照」欄位，可能導致主管查驗漏洞。`
+                        msg: `項次 ${displayItemNo}：涉及特種高危作業，但未勾選「法定資格證照」欄位，可能導致主管查驗漏洞。`
                     });
                     warningCount++;
                 }
@@ -2312,7 +2336,7 @@ ${JSON.stringify(assessmentData)}`;
                         rowId: rowId,
                         level: "warning",
                         type: "嚴重度評估偏差",
-                        msg: `項次 ${rowId}：控制後之嚴重度從 S${s1} 驟降為 S${s2}。實務上防護設施多僅能降低事故「可能性(P)」，本質危害之「嚴重度(S)」仍應維持，建議調回合理嚴重度（如 S${s1} 或 S${s1 - 1}）。`
+                        msg: `項次 ${displayItemNo}：控制後之嚴重度從 S${s1} 驟降為 S${s2}。實務上防護設施多僅能降低事故「可能性(P)」，本質危害之「嚴重度(S)」仍應維持，建議調回合理嚴重度（如 S${s1} 或 S${s1 - 1}）。`
                     });
                     warningCount++;
                 }
@@ -2657,7 +2681,7 @@ async function verifyAdminPassword() {
 
         function openAttachmentModal(rowId) {
             currentAttachmentRowId = rowId;
-            document.getElementById('attach-modal-title').innerText = `(項次 ${rowId})`;
+            document.getElementById('attach-modal-title').innerText = `(項次 ${getDisplayItemNo(rowId)})`;
             const attachments = window._tempAttachments[rowId] || [];
             renderAttachmentList(attachments);
             document.getElementById('attachmentModal').classList.remove('hidden');
