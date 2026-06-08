@@ -320,6 +320,13 @@ table.osra-table .sticky-title-col {
                 resize: none !important; /* 列印時強制隱藏高度縮放調整圖示 */
             }
 
+/* 列印時隱藏欄位提示文字 placeholder，例如：主管簽章、例如: OSRA-2026-001 */
+table.osra-table input::placeholder,
+table.osra-table textarea::placeholder {
+    color: transparent !important;
+    opacity: 0 !important;
+}            
+
             /* 避免換頁切斷列 */
             table.osra-table tr {
                 page-break-inside: avoid !important;
