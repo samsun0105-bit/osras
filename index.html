@@ -56,7 +56,74 @@
         }
         table.osra-table th:first-child, table.osra-table td:first-child {
             border-left: 1px solid #cbd5e1;
-        }
+        }      
+
+/* 表格工作區：保留水平與垂直捲動 */
+.osra-table-scroll {
+    position: relative;
+    overflow: auto;
+    max-height: 72vh;
+    scrollbar-gutter: stable;
+}
+
+/* 左側兩欄總寬度：項次 56px + 作業名稱 180px = 236px */
+:root {
+    --osra-sticky-item-width: 56px;
+    --osra-sticky-title-width: 180px;
+    --osra-sticky-left-width: 236px;
+}
+
+/* 凍結左側合併儲存格：公司名稱、作業標的與名稱、填表人 */
+table.osra-table .sticky-left-band {
+    position: sticky;
+    left: 0;
+    z-index: 35;
+    min-width: var(--osra-sticky-left-width);
+    width: var(--osra-sticky-left-width);
+    box-shadow: 4px 0 6px rgba(15, 23, 42, 0.08);
+}
+
+/* 凍結第 1 欄：項次 */
+table.osra-table .sticky-item-col {
+    position: sticky;
+    left: 0;
+    z-index: 30;
+    min-width: var(--osra-sticky-item-width);
+    width: var(--osra-sticky-item-width);
+    box-shadow: 2px 0 4px rgba(15, 23, 42, 0.05);
+}
+
+/* 凍結第 2 欄：作業名稱 */
+table.osra-table .sticky-title-col {
+    position: sticky;
+    left: var(--osra-sticky-item-width);
+    z-index: 30;
+    min-width: var(--osra-sticky-title-width);
+    width: var(--osra-sticky-title-width);
+    box-shadow: 4px 0 6px rgba(15, 23, 42, 0.08);
+}
+
+/* 確保固定區背景不要透明，避免拖移時文字疊在一起 */
+table.osra-table .sticky-left-band.bg-slate-100,
+table.osra-table .sticky-item-col.bg-slate-50 {
+    background-color: #f1f5f9;
+}
+
+table.osra-table .sticky-left-band.bg-section-1,
+table.osra-table .sticky-item-col.bg-section-1,
+table.osra-table .sticky-title-col.bg-section-1 {
+    background-color: #fef08a;
+}
+
+table.osra-table .sticky-title-col {
+    background-color: #ffffff;
+}
+
+/* 作業名稱固定欄文字加強辨識 */
+table.osra-table .sticky-title-col textarea {
+    font-weight: 600;
+    color: #0f172a;
+}
 
         /* 閃爍 AI 載入特效 */
         @keyframes pulse-gold {
@@ -135,9 +202,9 @@
             }
             
             /* 隱藏非表格區域 */
-            nav, footer, #dashboard-stats, #bottom-panels, #toast-container, #adminModal, #attachmentModal, #sheet-tabs-container {
-                display: none !important;
-            }
+nav, footer, #dashboard-stats, #bottom-panels, #toast-container, #adminModal, #attachmentModal, #sheet-tabs-container {
+    display: none !important;
+}
 
             body {
                 background-color: white !important;
@@ -225,6 +292,20 @@ table.osra-table tr {
             .overflow-x-auto {
                 overflow: visible !important;
             }
+
+.osra-table-scroll {
+    overflow: visible !important;
+    max-height: none !important;
+    border: none !important;
+}            
+
+table.osra-table .sticky-left-band,
+table.osra-table .sticky-item-col,
+table.osra-table .sticky-title-col {
+    position: static !important;
+    left: auto !important;
+    box-shadow: none !important;
+}
 
             /* 隱藏操作與管理欄位 */
             .admin-only-cell, .admin-only-block {
@@ -382,12 +463,12 @@ table.osra-table tr {
                     </div>
 
                     <!-- 表格滾動容器 -->
-                    <div class="overflow-x-auto">
-                        <table id="osraTable" class="osra-table w-full text-xs text-slate-700 min-w-[1900px]">
+<div class="osra-table-scroll border-t border-slate-200">
+    <table id="osraTable" class="osra-table w-full text-xs text-slate-700 min-w-[1900px]">
                             <thead>
                                 <!-- 表頭文件資訊 -->
                                 <tr class="text-slate-800 text-xs">
-                                    <th colspan="2" class="py-2 px-3 font-bold text-center bg-slate-100">公司名稱</th>
+                                    <th colspan="2" class="sticky-left-band py-2 px-3 font-bold text-center bg-slate-100">公司名稱</th>
                                     <th colspan="3" class="py-2 px-3 font-normal bg-white">
                                         <input
     type="text"
@@ -429,7 +510,7 @@ table.osra-table tr {
                                 </tr>
                                 <!-- 第一層分類 -->
                                 <tr class="font-bold text-center bg-slate-100 text-slate-900">
-                                    <th colspan="2" class="bg-section-1 py-3 border-t-2 border-amber-500">1. 作業標的與名稱</th>
+                                    <th colspan="2" class="sticky-left-band bg-section-1 py-3 border-t-2 border-amber-500">1. 作業標的與名稱</th>
                                     <th colspan="7" class="bg-section-2-1 border-t-2 border-blue-500">2. 危害辨識、情境與法規評估</th>
                                     <th colspan="3" class="bg-section-3 border-t-2 border-orange-400">3. 現有防護設施</th>
                                     <th colspan="3" class="bg-section-4 border-t-2 border-violet-500">4. 初始風險評估</th>
@@ -439,8 +520,8 @@ table.osra-table tr {
                                 </tr>
                                 <!-- 第二層細項 -->
                                 <tr class="font-semibold text-[11px] text-center text-slate-700">
-                                    <th class="bg-section-1 w-12 py-2">項次</th>
-                                    <th class="bg-section-1 min-w-[180px]">作業名稱</th>
+                                    <th class="sticky-item-col bg-section-1 w-12 py-2">項次</th>
+<th class="sticky-title-col bg-section-1 min-w-[180px]">作業名稱</th>
                                     <!-- 作業條件 -->
                                     <th class="bg-section-2-1 w-20">作業週期</th>
                                     <th class="bg-section-2-1 w-24">作業環境</th>
@@ -473,7 +554,7 @@ table.osra-table tr {
                             </tbody>
                             <tfoot>
                                 <tr class="text-slate-800 text-xs">
-                                    <td colspan="2" class="py-2 px-3 font-bold text-center bg-slate-100">填表人</td>
+                                    <td colspan="2" class="sticky-left-band py-2 px-3 font-bold text-center bg-slate-100">填表人</td>
                                     <td colspan="4" class="py-2 px-3 font-normal bg-white">
                                         <input
     type="text"
@@ -1166,6 +1247,10 @@ const RISK_METADATA = {
     }
 };
 
+// ----------------------------------------------------
+// C-0. 上方 / 下方水平捲軸同步控制
+// ----------------------------------------------------
+
         // ----------------------------------------------------
         // C. 初始化與視窗載入 (IndexedDB 非同步整合)
         // ----------------------------------------------------
@@ -1181,6 +1266,37 @@ const RISK_METADATA = {
                         model: localStorage.getItem('osra_gemini_model') || 'gemini-2.5-flash-lite'
                     };
                 }
+
+function syncOsraHorizontalScrollbars() {
+    const topScroll = document.getElementById('osra-top-scroll');
+    const topInner = document.getElementById('osra-top-scroll-inner');
+    const tableScroll = document.querySelector('.osra-table-scroll');
+    const table = document.getElementById('osraTable');
+
+    if (!topScroll || !topInner || !tableScroll || !table) return;
+
+    // 讓上方捲軸寬度跟實際表格寬度一致
+    topInner.style.width = table.scrollWidth + 'px';
+
+    let syncingFromTop = false;
+    let syncingFromTable = false;
+
+    topScroll.addEventListener('scroll', () => {
+        if (syncingFromTable) return;
+
+        syncingFromTop = true;
+        tableScroll.scrollLeft = topScroll.scrollLeft;
+        syncingFromTop = false;
+    });
+
+    tableScroll.addEventListener('scroll', () => {
+        if (syncingFromTop) return;
+
+        syncingFromTable = true;
+        topScroll.scrollLeft = tableScroll.scrollLeft;
+        syncingFromTable = false;
+    });
+}
 
                 // 初始化管理員密碼 (若無則預設為 1068)
                 const savedPassword = await getDBValue('admin_password');
@@ -1370,9 +1486,9 @@ rowCounter = targetSheet.rowCounter;
                 addNewRow(null, null, true);
             }
 
-            renderTabs();
-            updateDashboardStats();
-            if (!initialLoad) syncWorkbook();
+renderTabs();
+updateDashboardStats();
+if (!initialLoad) syncWorkbook();
         }
 
         function addTab() {
@@ -1439,8 +1555,8 @@ workbook.sheets.push({
 
             tr.innerHTML = `
                 <!-- 1. 作業項次與名稱 -->
-                <td class="bg-slate-50 text-center font-bold font-mono text-slate-500"></td>
-                <td class="p-2 relative group">
+<td class="sticky-item-col bg-slate-50 text-center font-bold font-mono text-slate-500"></td>
+<td class="sticky-title-col p-2 relative group">
                     <div class="flex items-center gap-1">
                         <textarea id="title-${rowId}" onchange="updateRowState(${rowId})" class="w-full bg-transparent border-0 focus:ring-1 focus:ring-indigo-500 rounded p-1 text-[11px] font-medium placeholder-slate-400" placeholder="輸入作業，例如:高架起重吊掛..."></textarea>
                         <button onclick="triggerRowAi(${rowId})" title="AI智慧自動完成" class="admin-only-block ai-pulse-btn text-amber-500 hover:text-amber-600 bg-amber-50 hover:bg-amber-100 p-1 rounded border border-amber-200 transition">
