@@ -1131,6 +1131,14 @@ function normalizeSheet(sheet) {
     if (typeof sheet.rowCounter !== 'number') {
         sheet.rowCounter = 0;
     }
+
+    if (typeof sheet.auditWarningCount !== 'number') {
+        sheet.auditWarningCount = 0;
+    }
+
+    if (typeof sheet.auditHtml !== 'string') {
+        sheet.auditHtml = '';
+    }
 }
 
 function getSheetMetaFromForm() {
@@ -1182,17 +1190,22 @@ let workbook = {
             name: '預設評估表',
             meta: createEmptySheetMeta(),
             data: [],
-            rowCounter: 0
+            rowCounter: 0,
+            auditWarningCount: 0,
+            auditHtml: ''
         }
     ]
 };
-        let osraData = [];
-        let rowCounter = 0;
-        let config = {
-            apiKey: '',
-            model: 'gemini-2.5-flash-lite'
-        };
-        let isAdminAuthenticated = false; // 管理員登入狀態鎖定
+let osraData = [];
+let rowCounter = 0;
+let isRenderingSheet = false;
+
+let config = {
+    apiKey: '',
+    model: 'gemini-2.5-flash-lite'
+};
+
+let isAdminAuthenticated = false; // 管理員登入狀態鎖定
         
 function syncWorkbook() {
     const sheet = getActiveSheet();
@@ -1266,37 +1279,6 @@ const RISK_METADATA = {
                         model: localStorage.getItem('osra_gemini_model') || 'gemini-2.5-flash-lite'
                     };
                 }
-
-function syncOsraHorizontalScrollbars() {
-    const topScroll = document.getElementById('osra-top-scroll');
-    const topInner = document.getElementById('osra-top-scroll-inner');
-    const tableScroll = document.querySelector('.osra-table-scroll');
-    const table = document.getElementById('osraTable');
-
-    if (!topScroll || !topInner || !tableScroll || !table) return;
-
-    // 讓上方捲軸寬度跟實際表格寬度一致
-    topInner.style.width = table.scrollWidth + 'px';
-
-    let syncingFromTop = false;
-    let syncingFromTable = false;
-
-    topScroll.addEventListener('scroll', () => {
-        if (syncingFromTable) return;
-
-        syncingFromTop = true;
-        tableScroll.scrollLeft = topScroll.scrollLeft;
-        syncingFromTop = false;
-    });
-
-    tableScroll.addEventListener('scroll', () => {
-        if (syncingFromTop) return;
-
-        syncingFromTable = true;
-        topScroll.scrollLeft = tableScroll.scrollLeft;
-        syncingFromTable = false;
-    });
-}
 
                 // 初始化管理員密碼 (若無則預設為 1068)
                 const savedPassword = await getDBValue('admin_password');
@@ -1476,19 +1458,25 @@ setSheetMetaToForm(targetSheet.meta);
 osraData = JSON.parse(JSON.stringify(targetSheet.data));
 rowCounter = targetSheet.rowCounter;
 
-            document.getElementById('tableBody').innerHTML = '';
-            
-            if (osraData.length > 0) {
-                osraData.forEach(rowData => {
-                    addNewRow(rowData, rowData.id, true); // true 代表渲染時不觸發保存
-                });
-            } else if (!initialLoad) {
-                addNewRow(null, null, true);
-            }
+document.getElementById('tableBody').innerHTML = '';
+
+isRenderingSheet = true;
+
+try {
+    if (osraData.length > 0) {
+        osraData.forEach(rowData => {
+            addNewRow(rowData, rowData.id, true);
+        });
+    } else if (!initialLoad) {
+        addNewRow(null, null, true);
+    }
+} finally {
+    isRenderingSheet = false;
+}
 
 renderTabs();
 updateDashboardStats();
-resetAuditPanelForCurrentSheet();
+restoreAuditPanelForCurrentSheet();
 
 if (!initialLoad) syncWorkbook();
         }
@@ -1503,7 +1491,9 @@ workbook.sheets.push({
     name: name.trim(),
     meta: createEmptySheetMeta(),
     data: [],
-    rowCounter: 0
+    rowCounter: 0,
+    auditWarningCount: 0,
+    auditHtml: ''
 });
             
             switchTab(newId);
@@ -1851,8 +1841,13 @@ function calculateRisk(rowId) {
         updateRiskBadge(`risk-r2-${rowId}`, r2);
     }
 
-    saveRowState(rowId);
-    updateDashboardStats();
+saveRowState(rowId);
+updateDashboardStats();
+
+if (!isRenderingSheet) {
+    markAuditAsOutdatedForCurrentSheet();
+}
+
 }
 
         // ----------------------------------------------------
@@ -1869,10 +1864,14 @@ function calculateRisk(rowId) {
             syncWorkbook();
         }
 
-        function updateRowState(rowId) {
-            saveRowState(rowId);
-            updateDashboardStats();
-        }
+function updateRowState(rowId) {
+    saveRowState(rowId);
+    updateDashboardStats();
+
+    if (!isRenderingSheet) {
+        markAuditAsOutdatedForCurrentSheet();
+    }
+}
 
         function getRowData(rowId) {
             const getVal = (id) => {
@@ -2216,24 +2215,65 @@ showToast(`🎉 整批生成完成！已成功建置 ${tasks.length} 筆完整�
         // L. AI 風險評估稽核模組 (符合上傳之 4x4 及控制原則)
         // ----------------------------------------------------
 
-function resetAuditPanelForCurrentSheet() {
-    const warningEl = document.getElementById('stat-audit-warnings');
+function getDefaultAuditEmptyHtml() {
+    return `
+        <div class="text-center py-8 text-slate-400">
+            <i class="fa-solid fa-shield-virus text-4xl mb-2 text-slate-300"></i>
+            <p class="text-xs">尚未執行風險稽核</p>
+            <p class="text-[10px] text-slate-400 mt-1">請點選右上角「執行 AI 稽核」啟動完整分析</p>
+        </div>
+    `;
+}
 
+function restoreAuditPanelForCurrentSheet() {
+    const sheet = getActiveSheet();
+    if (!sheet) return;
+
+    normalizeSheet(sheet);
+
+    const warningEl = document.getElementById('stat-audit-warnings');
     if (warningEl) {
-        warningEl.innerText = '0';
+        warningEl.innerText = sheet.auditWarningCount || 0;
     }
 
     const auditResults = document.getElementById('audit-results');
-
     if (auditResults) {
-        auditResults.innerHTML = `
-            <div class="text-center py-8 text-slate-400">
-                <i class="fa-solid fa-shield-virus text-4xl mb-2 text-slate-300"></i>
-                <p class="text-xs">尚未執行風險稽核</p>
-                <p class="text-[10px] text-slate-400 mt-1">請點選右上角「執行 AI 稽核」啟動完整分析</p>
-            </div>
-        `;
+        auditResults.innerHTML =
+            sheet.auditHtml && sheet.auditHtml.trim() !== ''
+                ? sheet.auditHtml
+                : getDefaultAuditEmptyHtml();
     }
+}
+
+function saveAuditPanelToCurrentSheet(warningCount, htmlContent) {
+    const sheet = getActiveSheet();
+    if (!sheet) return;
+
+    normalizeSheet(sheet);
+
+    sheet.auditWarningCount = Number(warningCount) || 0;
+    sheet.auditHtml = htmlContent || '';
+
+    syncWorkbook();
+}
+
+function markAuditAsOutdatedForCurrentSheet() {
+    const sheet = getActiveSheet();
+    if (!sheet) return;
+
+    normalizeSheet(sheet);
+
+    sheet.auditWarningCount = 0;
+    sheet.auditHtml = `
+        <div class="text-center py-8 text-slate-400">
+            <i class="fa-solid fa-shield-virus text-4xl mb-2 text-slate-300"></i>
+            <p class="text-xs">資料已變更，建議重新執行風險稽核</p>
+            <p class="text-[10px] text-slate-400 mt-1">請點選右上角「執行 AI 稽核」更新目前分頁的稽核結果</p>
+        </div>
+    `;
+
+    restoreAuditPanelForCurrentSheet();
+    syncWorkbook();
 }
 
         async function runAiAudit() {
@@ -2402,15 +2442,15 @@ rows.forEach((row, index) => {
     const id = parseInt(row.getAttribute('data-row-id'));
     const data = getRowData(id);
 
-    assessmentData.push({
-        ...data,
+assessmentData.push({
+    ...data,
 
-        // 給 AI 報告使用的正式畫面項次
-        rowId: index + 1,
+    // 給 AI 報告使用的正式畫面項次
+    rowId: index + 1,
 
-        // 保留內部 ID 僅供除錯，不要求 AI 顯示
-        internalRowId: id
-    });
+    // 保留內部 ID 僅供除錯，不要求 AI 顯示
+    internalRowId: id
+});
 });
 
         const prompt = `您是一位極度嚴謹的 ISO 45001 與台灣職業安全衛生法規稽核專家。
@@ -2516,13 +2556,15 @@ ${JSON.stringify(assessmentData)}`;
             }).join("");
         }
 
-        auditResults.innerHTML = htmlContent;
-        document.getElementById('stat-audit-warnings').innerText = warningCount;
+auditResults.innerHTML = htmlContent;
+document.getElementById('stat-audit-warnings').innerText = warningCount;
 
-        showToast(
-            `深度稽核完成！共發現 ${warningCount} 項法規或邏輯優化調整點。`,
-            warningCount > 0 ? "warning" : "success"
-        );
+saveAuditPanelToCurrentSheet(warningCount, htmlContent);
+
+showToast(
+    `深度稽核完成！共發現 ${warningCount} 項法規或邏輯優化調整點。`,
+    warningCount > 0 ? "warning" : "success"
+);
 
     } catch (err) {
         console.error("AI 稽核 API 請求失敗：", err);
@@ -2626,38 +2668,44 @@ rows.forEach((row) => {
                 }
             });
 
-            if (auditLogs.length === 0) {
-                document.getElementById('audit-results').innerHTML = `
-                    <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-center">
-                        <i class="fa-solid fa-circle-check text-emerald-500 text-3xl mb-2"></i>
-                        <h4 class="font-bold text-sm text-emerald-900">審查通過！未發現明顯邏輯瑕疵</h4>
-                        <p class="text-[10px] text-emerald-700 mt-1">此 OSRA 報表之評估邏輯高度契合 ISO 45001 風險控制層級與您設定的 4x4 職安審查矩陣。</p>
-                    </div>
-                `;
-            } else {
-                document.getElementById('audit-results').innerHTML = auditLogs.map(log => {
-                    let borderCol = "border-amber-200 bg-amber-50 text-amber-900";
-                    let icon = "fa-triangle-exclamation text-amber-500";
-                    
-                    if (log.level === "critical") {
-                        borderCol = "border-red-200 bg-red-50 text-red-950";
-                        icon = "fa-circle-xmark text-red-600";
-                    }
+let htmlContent = "";
 
-                    return `
-                        <div class="p-3 border rounded-lg ${borderCol} text-xs flex gap-2">
-                            <i class="fa-solid ${icon} text-base mt-0.5 shrink-0"></i>
-                            <div>
-                                <span class="font-bold uppercase tracking-wider text-[9px] bg-slate-800 text-white px-1.5 py-0.5 rounded-md inline-block mb-1">${log.type}</span>
-                                <p class="leading-relaxed font-medium">${log.msg}</p>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
+if (auditLogs.length === 0) {
+    htmlContent = `
+        <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-center">
+            <i class="fa-solid fa-circle-check text-emerald-500 text-3xl mb-2"></i>
+            <h4 class="font-bold text-sm text-emerald-900">審查通過！未發現明顯邏輯瑕疵</h4>
+            <p class="text-[10px] text-emerald-700 mt-1">此 OSRA 報表之評估邏輯高度契合 ISO 45001 風險控制層級與您設定的 4x4 職安審查矩陣。</p>
+        </div>
+    `;
+} else {
+    htmlContent = auditLogs.map(log => {
+        let borderCol = "border-amber-200 bg-amber-50 text-amber-900";
+        let icon = "fa-triangle-exclamation text-amber-500";
+        
+        if (log.level === "critical") {
+            borderCol = "border-red-200 bg-red-50 text-red-950";
+            icon = "fa-circle-xmark text-red-600";
+        }
 
-            document.getElementById('stat-audit-warnings').innerText = warningCount;
-            showToast(`風險稽核掃描完成！共發現 ${warningCount} 項優化調整點。`, warningCount > 0 ? "warning" : "success");
+        return `
+            <div class="p-3 border rounded-lg ${borderCol} text-xs flex gap-2">
+                <i class="fa-solid ${icon} text-base mt-0.5 shrink-0"></i>
+                <div>
+                    <span class="font-bold uppercase tracking-wider text-[9px] bg-slate-800 text-white px-1.5 py-0.5 rounded-md inline-block mb-1">${log.type}</span>
+                    <p class="leading-relaxed font-medium">${log.msg}</p>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+document.getElementById('audit-results').innerHTML = htmlContent;
+document.getElementById('stat-audit-warnings').innerText = warningCount;
+
+saveAuditPanelToCurrentSheet(warningCount, htmlContent);
+
+showToast(`風險稽核掃描完成！共發現 ${warningCount} 項優化調整點。`, warningCount > 0 ? "warning" : "success");
         }
 
         // ----------------------------------------------------
