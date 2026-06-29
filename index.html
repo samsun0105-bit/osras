@@ -604,12 +604,33 @@ body.file-preview-open {
         white-space: nowrap;
     }
 
-    /* 管理員鑰匙按鈕：手機版維持小顆，靠右顯示 */
-    nav #admin-toggle-btn {
-        width: 44px;
-        min-height: 38px;
-        justify-self: end;
-    }
+/* 手機版：隱藏功能按鈕區裡原本的管理員鑰匙 */
+nav #admin-toggle-btn {
+    display: none !important;
+}
+
+/* 手機版：顯示標題區右上角的管理員鑰匙 */
+nav #mobile-admin-toggle-btn {
+    display: inline-flex !important;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 手機版：讓標題區左右排列更穩定 */
+nav h1 {
+    font-size: 1.3rem;
+    line-height: 1.2;
+    word-break: keep-all;
+}
+
+nav p {
+    font-size: 0.68rem;
+    line-height: 1.25;
+    word-break: keep-all;
+}
 
 
     /* =========================
@@ -859,17 +880,32 @@ table.osra-table textarea::placeholder {
     <!-- 頂部導航欄 (單排流暢佈局) -->
     <nav class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-[1700px] mx-auto px-4 py-3 flex flex-col lg:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3 shrink-0">
-                <div class="bg-indigo-600 p-2.5 rounded-lg flex items-center justify-center">
-                    <i class="fa-solid fa-shield-halved text-2xl text-yellow-300"></i>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-bold tracking-wide flex items-center gap-2">
-                        職業安全風險評估系統
-                    </h1>
-                    <p class="text-slate-400 text-sm font-mono">OCCUPATIONAL SAFETY RISK ASSESSMENT SYSTEM</p>
-                </div>
+<div class="flex items-center gap-3 shrink-0 w-full lg:w-auto">
+    <div class="bg-indigo-600 p-2.5 rounded-lg flex items-center justify-center shrink-0">
+        <i class="fa-solid fa-shield-halved text-2xl text-yellow-300"></i>
+    </div>
+
+    <div class="min-w-0 flex-1">
+        <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+                <h1 class="text-2xl font-bold tracking-wide flex items-center gap-2">
+                    職業安全風險評估系統
+                </h1>
+                <p class="text-slate-400 text-sm font-mono">OCCUPATIONAL SAFETY RISK ASSESSMENT SYSTEM</p>
             </div>
+
+            <!-- 手機版管理員登入鑰匙：只在手機標題區顯示 -->
+            <button
+                id="mobile-admin-toggle-btn"
+                onclick="toggleAdmin()"
+                class="mobile-admin-key-btn hidden bg-slate-800 hover:bg-slate-700 text-yellow-500 hover:text-yellow-400 p-2.5 rounded-lg text-sm font-medium transition items-center justify-center border border-slate-700 shrink-0"
+                title="管理員登入"
+            >
+                <i id="mobile-admin-key-icon" class="fa-solid fa-key"></i>
+            </button>
+        </div>
+    </div>
+</div>
             
             <!-- 導航功能按鈕組：簡潔精緻單排按鈕群 -->
             <div class="flex flex-wrap justify-center lg:justify-end items-center gap-2.5 w-full lg:w-auto">
@@ -3392,47 +3428,75 @@ const targetRate = total > 0
         }
 
         // 動態根據登入狀態變更全域 Class (藉此優雅地切換新增項次、儲存與表格操作欄位的顯示狀態)
-        function updateAdminModeUI() {
-            const icon = document.getElementById('admin-key-icon');
-            const btn = document.getElementById('admin-toggle-btn');
-            
-            if (isAdminAuthenticated) {
-                document.body.classList.add('admin-mode');
-                if (icon) {
-                    icon.className = "fa-solid fa-unlock-keyhole text-emerald-400 animate-pulse";
-                }
-                if (btn) {
-                    btn.title = "管理員登出 (目前已登入)";
-                    btn.className = "bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 p-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center border border-emerald-600 shadow-md shadow-emerald-900/10";
-                }
-            } else {
-                document.body.classList.remove('admin-mode');
-                if (icon) {
-                    icon.className = "fa-solid fa-key text-yellow-500";
-                }
-                if (btn) {
-                    btn.title = "管理員登入";
-                    btn.className = "bg-slate-800 hover:bg-slate-700 text-yellow-500 hover:text-yellow-400 p-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center border border-slate-700";
-                }
-            }
+// 動態根據登入狀態變更全域 Class
+function updateAdminModeUI() {
+    const icon = document.getElementById('admin-key-icon');
+    const btn = document.getElementById('admin-toggle-btn');
 
-            // 更新表格輸入框唯讀狀態
-            const tableInputs = document.querySelectorAll('#osraTable input, #osraTable textarea');
-            tableInputs.forEach(input => {
-                if (input.type === 'checkbox') {
-                    input.disabled = !isAdminAuthenticated;
-                } else {
-                    input.readOnly = !isAdminAuthenticated;
-                    // 當非管理員時，隱藏 placeholder 讓報表看起更乾淨；反之則復原
-                    if (!isAdminAuthenticated && !input.dataset.origPlaceholder) {
-                        input.dataset.origPlaceholder = input.placeholder;
-                        input.placeholder = "";
-                    } else if (isAdminAuthenticated && input.dataset.origPlaceholder) {
-                        input.placeholder = input.dataset.origPlaceholder;
-                    }
-                }
-            });
+    const mobileIcon = document.getElementById('mobile-admin-key-icon');
+    const mobileBtn = document.getElementById('mobile-admin-toggle-btn');
+
+    if (isAdminAuthenticated) {
+        document.body.classList.add('admin-mode');
+
+        if (icon) {
+            icon.className = "fa-solid fa-unlock-keyhole text-emerald-400 animate-pulse";
         }
+
+        if (mobileIcon) {
+            mobileIcon.className = "fa-solid fa-unlock-keyhole text-emerald-400 animate-pulse";
+        }
+
+        if (btn) {
+            btn.title = "管理員登出 (目前已登入)";
+            btn.className = "bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 p-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center border border-emerald-600 shadow-md shadow-emerald-900/10";
+        }
+
+        if (mobileBtn) {
+            mobileBtn.title = "管理員登出 (目前已登入)";
+            mobileBtn.className = "mobile-admin-key-btn hidden bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 p-2.5 rounded-lg text-sm font-medium transition items-center justify-center border border-emerald-600 shadow-md shadow-emerald-900/10 shrink-0";
+        }
+
+    } else {
+        document.body.classList.remove('admin-mode');
+
+        if (icon) {
+            icon.className = "fa-solid fa-key text-yellow-500";
+        }
+
+        if (mobileIcon) {
+            mobileIcon.className = "fa-solid fa-key text-yellow-500";
+        }
+
+        if (btn) {
+            btn.title = "管理員登入";
+            btn.className = "bg-slate-800 hover:bg-slate-700 text-yellow-500 hover:text-yellow-400 p-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center border border-slate-700";
+        }
+
+        if (mobileBtn) {
+            mobileBtn.title = "管理員登入";
+            mobileBtn.className = "mobile-admin-key-btn hidden bg-slate-800 hover:bg-slate-700 text-yellow-500 hover:text-yellow-400 p-2.5 rounded-lg text-sm font-medium transition items-center justify-center border border-slate-700 shrink-0";
+        }
+    }
+
+    // 更新表格輸入框唯讀狀態
+    const tableInputs = document.querySelectorAll('#osraTable input, #osraTable textarea');
+    tableInputs.forEach(input => {
+        if (input.type === 'checkbox') {
+            input.disabled = !isAdminAuthenticated;
+        } else {
+            input.readOnly = !isAdminAuthenticated;
+
+            // 當非管理員時，隱藏 placeholder 讓報表看起更乾淨；反之則復原
+            if (!isAdminAuthenticated && !input.dataset.origPlaceholder) {
+                input.dataset.origPlaceholder = input.placeholder;
+                input.placeholder = "";
+            } else if (isAdminAuthenticated && input.dataset.origPlaceholder) {
+                input.placeholder = input.dataset.origPlaceholder;
+            }
+        }
+    });
+}
 
 async function verifyAdminPassword() {
     const input = document.getElementById('adminPasswordInput').value;
