@@ -143,26 +143,51 @@ table.osra-table .sticky-title-col textarea {
         }
 
         /* 管理員模式動態控制顯示 */
-        .admin-only-cell {
-            display: none !important;
-        }
-        .admin-only-block {
-            display: none !important;
-        }
-        body.admin-mode .admin-only-cell {
-            display: table-cell !important;
-        }
-        body.admin-mode .admin-only-block {
-            display: inline-flex !important;
-        }
+.admin-edit-block,
+.admin-create-sheet-block,
+.admin-rename-sheet-block,
+.admin-delete-block,
+.admin-delete-cell {
+    display: none !important;
+}
+
+/* 附件按鈕：編輯者可新增附件；預覽者若已有附件也可開啟預覽 */
+.attachment-file-btn {
+    display: none !important;
+}
+
+body.edit-mode .attachment-file-btn,
+.attachment-file-btn.has-attachments {
+    display: inline-flex !important;
+}
+
+body.edit-mode .admin-edit-block {
+    display: inline-flex !important;
+}
+
+body.edit-mode .admin-rename-sheet-block {
+    display: inline-flex !important;
+}
+
+body.edit-mode .admin-create-sheet-block {
+    display: inline-flex !important;
+}
+
+body.admin-mode .admin-delete-block {
+    display: inline-flex !important;
+}
+
+body.admin-mode .admin-delete-cell {
+    display: table-cell !important;
+}
 
         /* 預覽模式表單唯讀外觀 */
-        body:not(.admin-mode) table.osra-table input,
-        body:not(.admin-mode) table.osra-table textarea {
+body:not(.edit-mode) table.osra-table input,
+body:not(.edit-mode) table.osra-table textarea {
             cursor: default;
         }
-        body:not(.admin-mode) table.osra-table input:focus,
-        body:not(.admin-mode) table.osra-table textarea:focus {
+body:not(.edit-mode) table.osra-table input:focus,
+body:not(.edit-mode) table.osra-table textarea:focus {
             outline: none;
             box-shadow: none;
         }
@@ -619,6 +644,14 @@ nav #mobile-admin-toggle-btn {
     justify-content: center;
 }
 
+nav #mobile-permission-settings-btn {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+}
+
 /* 手機版：讓標題區左右排列更穩定 */
 nav h1 {
     font-size: 1.3rem;
@@ -823,9 +856,13 @@ table.osra-table .sticky-title-col {
 }
 
             /* 隱藏操作與管理欄位 */
-            .admin-only-cell, .admin-only-block {
-                display: none !important;
-            }
+.admin-edit-block,
+.admin-create-sheet-block,
+.admin-rename-sheet-block,
+.admin-delete-block,
+.admin-delete-cell {
+    display: none !important;
+}
 
             /* 移除輸入框邊框使列印乾淨 */
             table.osra-table input, table.osra-table textarea {
@@ -903,6 +940,7 @@ table.osra-table textarea::placeholder {
             >
                 <i id="mobile-admin-key-icon" class="fa-solid fa-key"></i>
             </button>
+
         </div>
     </div>
 </div>
@@ -915,17 +953,34 @@ table.osra-table textarea::placeholder {
                 <button onclick="openBulkImportModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-md shadow-indigo-900/10">
                     <i class="fa-solid fa-file-import"></i> 批次智慧生成
                 </button>
-                <button onclick="exportToJson()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-md">
-                    <i class="fa-solid fa-file-export"></i> 導出數據
-                </button>
+<button id="export-json-btn"
+        onclick="exportToJson()"
+        class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-md">
+    <i class="fa-solid fa-file-export"></i>
+    <span id="export-json-label">匯出備份</span>
+</button>
 
-                <input type="file" id="dbImportInput" accept=".json" class="hidden" onchange="importFromJson(event)">
-                <button onclick="document.getElementById('dbImportInput').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-md">
-                    <i class="fa-solid fa-download"></i> 導入數據
-                </button>
-                <button id="admin-toggle-btn" onclick="toggleAdmin()" class="bg-slate-800 hover:bg-slate-700 text-yellow-500 hover:text-yellow-400 p-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center border border-slate-700" title="管理員登入">
-                    <i id="admin-key-icon" class="fa-solid fa-key"></i>
-                </button>
+<input type="file" id="dbImportInput" accept=".json" class="hidden" onchange="handleJsonFileLoad(event)">
+
+<button id="load-json-btn"
+        onclick="document.getElementById('dbImportInput').click()"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-md">
+    <i class="fa-solid fa-download"></i>
+    <span id="load-json-label">載入預覽</span>
+</button>
+<button id="admin-toggle-btn"
+        onclick="toggleAdmin()"
+        class="bg-slate-800 hover:bg-slate-700 text-yellow-500 hover:text-yellow-400 p-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center border border-slate-700"
+        title="權限登入 / 登出">
+    <i id="admin-key-icon" class="fa-solid fa-key"></i>
+</button>
+
+<button id="permission-settings-btn"
+        onclick="openPermissionSettingsModal()"
+        class="hidden bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-cyan-300 p-2.5 rounded-lg text-sm font-medium transition items-center justify-center border border-cyan-700 shadow-md"
+        title="權限與密碼設定">
+    <i class="fa-solid fa-gear"></i>
+</button>
             </div>
         </div>
     </nav>
@@ -985,10 +1040,10 @@ table.osra-table textarea::placeholder {
                         </span>
                         <!-- 新增管理員模式專用控制按鈕區 -->
                         <div class="flex gap-2">
-                            <button id="add-row-btn" onclick="addNewRow()" class="admin-only-block bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs font-semibold transition-colors flex items-center gap-1 shadow">
+                            <button id="add-row-btn" onclick="addNewRow()" class="admin-edit-block bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs font-semibold transition-colors flex items-center gap-1 shadow">
                                 <i class="fa-solid fa-plus"></i> 新增評估項次
                             </button>
-                            <button id="save-records-btn" onclick="manualSaveRecords()" class="admin-only-block bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs font-semibold transition-colors flex items-center gap-1 shadow">
+                            <button id="save-records-btn" onclick="manualSaveRecords()" class="admin-edit-block bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs font-semibold transition-colors flex items-center gap-1 shadow">
                                 <i class="fa-solid fa-floppy-disk"></i> 儲存記錄
                             </button>
                         </div>
@@ -1053,7 +1108,7 @@ table.osra-table textarea::placeholder {
                                     <th colspan="3" class="bg-section-4 border-t-2 border-violet-500">4. 初始風險評估</th>
                                     <th class="bg-section-5 min-w-[280px] border-t-2 border-rose-400">5. 降低風險採取之控制措施</th>
                                     <th colspan="3" class="bg-section-6 border-t-2 border-slate-500">6. 控制後預估風險</th>
-                                    <th class="bg-slate-200 w-16 text-slate-800 admin-only-cell">操作</th>
+                                    <th class="bg-slate-200 w-16 text-slate-800 admin-delete-cell">操作</th>
                                 </tr>
                                 <!-- 第二層細項 -->
                                 <tr class="font-semibold text-[11px] text-center text-slate-700">
@@ -1083,7 +1138,7 @@ table.osra-table textarea::placeholder {
                                     <th class="bg-section-6 w-16">可能性(P)</th>
                                     <th class="bg-section-6 w-16">風險等級</th>
                                     
-                                    <th class="bg-slate-200 admin-only-cell">管理</th>
+                                    <th class="bg-slate-200 admin-delete-cell">管理</th>
                                 </tr>
                             </thead>
                             <tbody id="tableBody">
@@ -1276,65 +1331,158 @@ table.osra-table textarea::placeholder {
         </div>
     </main>
 
-    <!-- 彈窗1：管理員安全登入與密碼變更 Modal -->
-    <div id="adminModal" onclick="closeAdminModalOutside(event)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div onclick="event.stopPropagation()" class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-6 animate-fade-in mx-4">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-lg text-slate-900 flex items-center gap-2">
-                    <i class="fa-solid fa-lock text-indigo-600"></i> 管理員控制台
-                </h3>
-                <button onclick="closeAdminModal()" class="text-slate-400 hover:text-slate-600">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
+<!-- 彈窗1：管理員安全登入 Modal -->
+<div id="adminModal"
+     onclick="closeAdminModalOutside(event)"
+     class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
 
-            <!-- 分頁標籤 -->
-            <div class="flex border-b text-sm my-4">
-                <button id="tab-login-btn" onclick="switchAdminTab('login')" class="flex-1 py-2 font-semibold text-indigo-600 border-b-2 border-indigo-600 focus:outline-none">安全登入</button>
-                <button id="tab-pw-btn" onclick="switchAdminTab('password')" class="flex-1 py-2 font-semibold text-slate-500 hover:text-slate-800 border-b-2 border-transparent focus:outline-none">修改管理密碼</button>
-            </div>
+    <div onclick="event.stopPropagation()"
+         class="w-full max-w-sm mx-4 overflow-hidden rounded-2xl bg-white shadow-xl border border-slate-200 animate-fade-in">
 
-            <!-- 標籤頁一：登入 -->
-            <div id="tab-login" class="space-y-4">
-                <!-- 密碼輸入鎖定畫面 (移除請輸入密碼提示，呈現空白) -->
-                <div id="admin-lock-screen" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">請輸入登入密碼</label>
-                        <input type="password" id="adminPasswordInput" placeholder="" onkeydown="handleAdminLoginKey(event)" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <button onclick="verifyAdminPassword()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow transition">登入驗證</button>
+        <!-- 頂部簡潔標頭 -->
+        <div class="relative bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-900 px-5 py-4 text-white">
+            <button onclick="closeAdminModal()"
+                    class="absolute right-3 top-3 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white transition flex items-center justify-center">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+
+            <div class="pr-8">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-lock text-yellow-300 text-lg"></i>
+                    <h3 class="text-lg font-black tracking-wide">
+                        管理員控制台
+                    </h3>
                 </div>
 
-                <!-- 驗證成功後之設定畫面 (已移除 Gemini API 設定) -->
-                <div id="admin-settings-screen" class="space-y-4 hidden">
-                    <div class="bg-emerald-50 border border-emerald-100 rounded-lg p-3 text-xs text-emerald-800 flex items-center gap-2">
-                        <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                        <span>密碼驗證成功！目前已處於管理員高階編輯模式。</span>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="lockAdmin(); closeAdminModal();" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold shadow transition">安全鎖定 (登出)</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 標籤頁二：修改密碼 -->
-            <div id="tab-password" class="space-y-4 hidden">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">舊密碼</label>
-                    <input type="password" id="oldPasswordInput" placeholder="請輸入目前密碼..." onkeydown="handlePasswordChangeKey(event)" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">新密碼</label>
-                    <input type="password" id="newPasswordInput" placeholder="請輸入新密碼..." onkeydown="handlePasswordChangeKey(event)" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">再次輸入新密碼</label>
-                    <input type="password" id="confirmPasswordInput" placeholder="請再次輸入新密碼..." onkeydown="handlePasswordChangeKey(event)" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
-                </div>
-                <button onclick="changeAdminPassword()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow transition">更新密碼</button>
+                <p class="mt-1 text-[11px] text-slate-300 tracking-[0.14em] font-semibold">
+                    ACCESS CONTROL
+                </p>
             </div>
         </div>
+
+        <!-- 登入內容 -->
+        <div id="tab-login" class="px-5 py-5 space-y-4">
+
+            <div id="admin-lock-screen" class="space-y-4">
+
+                <!-- 安全登入狀態列 -->
+                <div class="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 px-4 py-2.5 text-base font-black">
+                    <i class="fa-solid fa-shield-keyhole text-indigo-600"></i>
+                    安全登入
+                </div>
+
+                <p class="text-center text-xs text-slate-500 leading-relaxed">
+                    請輸入管理者或使用者密碼，以啟動對應的系統操作權限。
+                </p>
+
+                <!-- 密碼輸入 -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2 text-center">
+                        請輸入登入密碼
+                    </label>
+
+                    <input
+                        type="password"
+                        id="adminPasswordInput"
+                        placeholder="••••••"
+                        onkeydown="handleAdminLoginKey(event)"
+                        class="w-full h-11 border border-slate-300 rounded-xl px-4 text-base text-center tracking-[0.42em] font-bold bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition"
+                    >
+                </div>
+
+                <!-- 登入按鈕 -->
+                <button onclick="verifyAdminPassword()"
+                        class="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black shadow-md shadow-indigo-500/20 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    登入驗證
+                </button>
+
+                <p class="text-[10px] text-center text-slate-400 leading-relaxed">
+                    未登入狀態僅提供預覽、列印、PDF 與 AI 稽核等功能。
+                </p>
+            </div>
+
+            <!-- 保留此區塊，避免 JS 參照錯誤；目前正常情況不顯示 -->
+            <div id="admin-settings-screen" class="space-y-4 hidden">
+                <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-xs text-emerald-800 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                    <span>密碼驗證成功！目前已處於對應權限模式。</span>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="lockAdmin(); closeAdminModal();"
+                            class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-semibold shadow transition">
+                        安全鎖定（登出）
+                    </button>
+                </div>
+            </div>
+
+        </div>
     </div>
+</div>
+
+<!-- 權限與密碼設定 Modal：僅管理者可開啟 -->
+<div id="permissionSettingsModal"
+     onclick="closePermissionSettingsModalOutside(event)"
+     class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center hidden">
+    <div onclick="event.stopPropagation()"
+         class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-6 animate-fade-in mx-4">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 class="font-bold text-lg text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-gear text-cyan-600"></i>
+                權限與密碼設定
+            </h3>
+            <button onclick="closePermissionSettingsModal()" class="text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <div class="space-y-4 mt-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">目前管理者密碼（修改管理者密碼時必填）</label>
+                <input type="password"
+                       id="oldPasswordInput"
+                       placeholder="••••••"
+                       onkeydown="handlePasswordChangeKey(event)"
+                       class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">新管理者密碼</label>
+                <input type="password"
+                       id="newPasswordInput"
+                       placeholder="••••••"
+                       onkeydown="handlePasswordChangeKey(event)"
+                       class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">新使用者密碼</label>
+                <input type="password"
+                       id="newEditorPasswordInput"
+                       placeholder="••••••"
+                       onkeydown="handlePasswordChangeKey(event)"
+                       class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
+            </div>
+
+            <label class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3 cursor-pointer">
+                <input type="checkbox" id="editorEnabledCheckbox" class="w-4 h-4 accent-indigo-600">
+                <span class="text-sm font-bold text-slate-700">啟用使用者共用權限</span>
+            </label>
+
+            <p class="text-xs text-slate-400 leading-relaxed">
+                使用者權限啟用後，可新增、編輯、批次智慧生成、新增與重新命名分頁、上傳附件、儲存資料與匯出審核用 JSON；刪除評估項次、刪除分頁、匯入備份與權限設定仍限管理者。
+            </p>
+
+            <button
+                type="button"
+                onclick="changeAdminPassword()"
+                class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow transition"
+            >
+                儲存設定
+            </button>
+        </div>
+    </div>
+</div>
 
     <!-- 彈窗3：附件上傳與管理 Modal (新增) -->
 <div id="bulkImportModal" onclick="closeBulkImportModalOutside(event)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
@@ -1405,7 +1553,7 @@ table.osra-table textarea::placeholder {
             </div>
             
             <!-- 上傳區 (Admin Only) -->
-            <div id="attachment-upload-zone" class="admin-only-block mt-4 border-2 border-dashed border-blue-200 rounded-xl p-6 flex items-center justify-center bg-blue-50/50 text-blue-800 transition hover:bg-blue-50 cursor-pointer flex-col" ondragenter="handleDragOver(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" onclick="document.getElementById('attachmentInput').click()">
+            <div id="attachment-upload-zone" class="admin-edit-block mt-4 border-2 border-dashed border-blue-200 rounded-xl p-6 flex items-center justify-center bg-blue-50/50 text-blue-800 transition hover:bg-blue-50 cursor-pointer flex-col" ondragenter="handleDragOver(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" onclick="document.getElementById('attachmentInput').click()">
                 <i class="fa-solid fa-cloud-arrow-up text-3xl mb-2 text-blue-400"></i>
                 <p class="text-sm font-bold">點擊或拖放檔案至此處上傳</p>
                 <p class="text-[10px] mt-1 text-slate-500">支援 PDF, PNG, JPG (單檔最大 5MB)</p>
@@ -1531,7 +1679,8 @@ const DB_NAME = 'OSRA_DB_V2';
 const DB_VERSION = 1;
 const STORE_NAME = 'osra_store';
 
-const DEFAULT_ADMIN_PASSWORD = "1068";
+const DEFAULT_ADMIN_PASSWORD = "SamCore@1068";
+const DEFAULT_EDITOR_PASSWORD = "TeamEdit116";
 const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
 
         function openDB() {
@@ -1809,7 +1958,54 @@ let config = {
     model: 'gemini-2.5-flash-lite'
 };
 
-let isAdminAuthenticated = false; // 管理員登入狀態鎖定
+let isAdminAuthenticated = false;
+let isEditorAuthenticated = false;
+
+let systemPassword = DEFAULT_ADMIN_PASSWORD;
+let editorPassword = DEFAULT_EDITOR_PASSWORD;
+let editorEnabled = true;
+
+function getCurrentRole() {
+    if (isAdminAuthenticated) return 'admin';
+    if (isEditorAuthenticated) return 'editor';
+    return 'viewer';
+}
+
+function canEditData() {
+    return isAdminAuthenticated || isEditorAuthenticated;
+}
+
+function canDeleteData() {
+    return isAdminAuthenticated;
+}
+
+function canChangePassword() {
+    return isAdminAuthenticated;
+}
+
+function canImportData() {
+    return isAdminAuthenticated;
+}
+
+function canExportReviewData() {
+    return isAdminAuthenticated || isEditorAuthenticated;
+}
+
+function canExportBackupData() {
+    return isAdminAuthenticated;
+}
+
+function canCreateSheets() {
+    return isAdminAuthenticated || isEditorAuthenticated;
+}
+
+function canRenameSheets() {
+    return isAdminAuthenticated || isEditorAuthenticated;
+}
+
+function canManageSheets() {
+    return isAdminAuthenticated;
+}
         
 function syncWorkbook() {
     const sheet = getActiveSheet();
@@ -1821,7 +2017,7 @@ function syncWorkbook() {
         sheet.rowCounter = rowCounter;
     }
 
-    setDBValue('workbook', workbook);
+    return setDBValue('workbook', workbook);
 }
 
         // 4x4 風險判定矩陣定義
@@ -1884,11 +2080,29 @@ const RISK_METADATA = {
                     };
                 }
 
-                // 初始化管理員密碼 (若無則預設為 1068)
-                const savedPassword = await getDBValue('admin_password');
-if (!savedPassword) {
-    await setDBValue('admin_password', DEFAULT_ADMIN_PASSWORD);
+let savedAdminPassword = await getDBValue('admin_password');
+let savedEditorPassword = await getDBValue('editor_password');
+let savedEditorEnabled = await getDBValue('editor_enabled');
+
+/* 舊版單一管理員密碼 1068 自動升級 */
+if (!savedAdminPassword || savedAdminPassword === "1068") {
+    savedAdminPassword = DEFAULT_ADMIN_PASSWORD;
+    await setDBValue('admin_password', savedAdminPassword);
 }
+
+if (!savedEditorPassword) {
+    savedEditorPassword = DEFAULT_EDITOR_PASSWORD;
+    await setDBValue('editor_password', savedEditorPassword);
+}
+
+if (savedEditorEnabled === null || savedEditorEnabled === undefined) {
+    savedEditorEnabled = true;
+    await setDBValue('editor_enabled', savedEditorEnabled);
+}
+
+systemPassword = savedAdminPassword;
+editorPassword = savedEditorPassword;
+editorEnabled = Boolean(savedEditorEnabled);
 
                 // 2. 讀取與重建表單數據 (支援新版 Workbook 分頁架構與舊版遷移)
                 const savedWorkbook = await getDBValue('workbook');
@@ -1942,6 +2156,7 @@ await setDBValue('workbook', workbook);
 window.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         closeAdminModal();
+        closePermissionSettingsModal();
         closeBulkImportModal();
         closeAttachmentModal();
         closeFilePreviewModal();
@@ -2017,7 +2232,7 @@ window.addEventListener('keydown', function(event) {
                 // Admin 專屬控制項 (新增、重新命名、刪除)
                 if (isActive) {
                     const controls = document.createElement('div');
-                    controls.className = 'admin-only-block gap-2 ml-2 pl-2 border-l border-indigo-100 flex items-center';
+                    controls.className = 'admin-rename-sheet-block gap-2 ml-2 pl-2 border-l border-indigo-100 flex items-center';
                     
                     const renameBtn = document.createElement('button');
                     renameBtn.innerHTML = '<i class="fa-solid fa-pen text-[10px]"></i>';
@@ -2027,7 +2242,7 @@ window.addEventListener('keydown', function(event) {
 
                     const deleteBtn = document.createElement('button');
                     deleteBtn.innerHTML = '<i class="fa-solid fa-trash text-[10px]"></i>';
-                    deleteBtn.className = 'text-slate-400 hover:text-red-600 transition';
+                    deleteBtn.className = 'admin-delete-block text-slate-400 hover:text-red-600 transition';
                     deleteBtn.title = "刪除分頁";
                     deleteBtn.onclick = (e) => { e.stopPropagation(); deleteTab(sheet.id); };
 
@@ -2043,7 +2258,7 @@ window.addEventListener('keydown', function(event) {
 
             // Admin 新增分頁按鈕
             const addBtn = document.createElement('button');
-            addBtn.className = 'admin-only-block flex items-center justify-center px-3 py-1.5 h-full rounded-t-lg bg-slate-200 text-slate-500 hover:bg-slate-300 hover:text-indigo-600 transition-colors self-end mb-[1px] ml-1 font-bold';
+            addBtn.className = 'admin-create-sheet-block flex items-center justify-center px-3 py-1.5 h-full rounded-t-lg bg-slate-200 text-slate-500 hover:bg-slate-300 hover:text-indigo-600 transition-colors self-end mb-[1px] ml-1 font-bold';
             addBtn.innerHTML = '<i class="fa-solid fa-plus text-xs"></i>';
             addBtn.title = "新增分頁";
             addBtn.onclick = () => addTab();
@@ -2087,60 +2302,86 @@ restoreAuditPanelForCurrentSheet();
 if (!initialLoad) syncWorkbook();
         }
 
-        function addTab() {
-            const name = prompt("請輸入新分頁名稱：", "新作業區域");
-            if (!name || name.trim() === "") return;
+function addTab() {
+    if (!canCreateSheets()) {
+        showToast("請先登入使用者或管理者權限後再新增分頁。", "warning");
+        openAdminModal();
+        return;
+    }
 
-            const newId = 'sheet_' + Date.now();
-workbook.sheets.push({
-    id: newId,
-    name: name.trim(),
-    meta: createEmptySheetMeta(),
-    data: [],
-    rowCounter: 0,
-    auditWarningCount: 0,
-    auditHtml: ''
-});
-            
-            switchTab(newId);
-            showToast(`已成功新增分頁「${name.trim()}」`, "success");
-        }
+    const name = prompt("請輸入新分頁名稱：", "新作業區域");
+    if (!name || name.trim() === "") return;
 
-        function renameTab(sheetId) {
-            const sheet = workbook.sheets.find(s => s.id === sheetId);
-            if (!sheet) return;
-            const newName = prompt("請輸入新的分頁名稱：", sheet.name);
-            if (newName !== null && newName.trim() !== "") {
-                sheet.name = newName.trim();
-                syncWorkbook();
-                renderTabs();
-                showToast("分頁名稱已更新", "success");
-            }
-        }
+    const newId = 'sheet_' + Date.now();
 
-        function deleteTab(sheetId) {
-            if (workbook.sheets.length <= 1) {
-                showToast("至少需保留一個分頁！", "error");
-                return;
-            }
-            const sheet = workbook.sheets.find(s => s.id === sheetId);
-            if (!confirm(`警告：確定要刪除分頁「${sheet.name}」及其所有評估資料嗎？此操作無法復原。`)) return;
+    workbook.sheets.push({
+        id: newId,
+        name: name.trim(),
+        meta: createEmptySheetMeta(),
+        data: [],
+        rowCounter: 0,
+        auditWarningCount: 0,
+        auditHtml: ''
+    });
 
-            workbook.sheets = workbook.sheets.filter(s => s.id !== sheetId);
-            
-            if (workbook.activeSheetId === sheetId) {
-                switchTab(workbook.sheets[0].id);
-            } else {
-                syncWorkbook();
-                renderTabs();
-            }
-            showToast(`分頁「${sheet.name}」已刪除`, "warning");
-        }
+    switchTab(newId);
+    showToast(`已成功新增分頁「${name.trim()}」`, "success");
+}
+
+function renameTab(sheetId) {
+    if (!canRenameSheets()) {
+        showToast("請先登入使用者或管理者權限後再重新命名分頁。", "warning");
+        openAdminModal();
+        return;
+    }
+
+    const sheet = workbook.sheets.find(s => s.id === sheetId);
+    if (!sheet) return;
+
+    const newName = prompt("請輸入新的分頁名稱：", sheet.name);
+    if (newName !== null && newName.trim() !== "") {
+        sheet.name = newName.trim();
+        syncWorkbook();
+        renderTabs();
+        showToast("分頁名稱已更新", "success");
+    }
+}
+
+function deleteTab(sheetId) {
+    if (!canManageSheets()) {
+        showToast("只有管理者可以刪除分頁。", "error");
+        return;
+    }
+
+    if (workbook.sheets.length <= 1) {
+        showToast("至少需保留一個分頁！", "error");
+        return;
+    }
+
+    const sheet = workbook.sheets.find(s => s.id === sheetId);
+    if (!confirm(`警告：確定要刪除分頁「${sheet.name}」及其所有評估資料嗎？此操作無法復原。`)) return;
+
+    workbook.sheets = workbook.sheets.filter(s => s.id !== sheetId);
+
+    if (workbook.activeSheetId === sheetId) {
+        switchTab(workbook.sheets[0].id);
+    } else {
+        syncWorkbook();
+        renderTabs();
+    }
+
+    showToast(`分頁「${sheet.name}」已刪除`, "warning");
+}
 
         // ----------------------------------------------------
         // E. 表格核心 DOM 增刪與渲染
         // ----------------------------------------------------
         function addNewRow(initialData = null, customId = null, skipSave = false) {
+            if (!skipSave && !canEditData()) {
+    showToast("請先登入使用者或管理者權限。", "warning");
+    openAdminModal();
+    return;
+}
             const rowId = customId !== null ? customId : ++rowCounter;
             if (customId !== null && customId > rowCounter) {
                 rowCounter = customId;
@@ -2157,7 +2398,7 @@ workbook.sheets.push({
 <td class="sticky-title-col p-2 relative group">
                     <div class="flex items-center gap-1">
                         <textarea id="title-${rowId}" onchange="updateRowState(${rowId})" class="w-full bg-transparent border-0 focus:ring-1 focus:ring-indigo-500 rounded p-1 text-[11px] font-medium placeholder-slate-400" placeholder="輸入作業，例如:高架起重吊掛..."></textarea>
-                        <button onclick="triggerRowAi(${rowId})" title="AI智慧自動完成" class="admin-only-block ai-pulse-btn text-amber-500 hover:text-amber-600 bg-amber-50 hover:bg-amber-100 p-1 rounded border border-amber-200 transition">
+                        <button onclick="triggerRowAi(${rowId})" title="AI智慧自動完成" class="admin-edit-block ai-pulse-btn text-amber-500 hover:text-amber-600 bg-amber-50 hover:bg-amber-100 p-1 rounded border border-amber-200 transition">
                             <i class="fa-solid fa-wand-magic-sparkles"></i>
                         </button>
                     </div>
@@ -2227,10 +2468,10 @@ class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
                     <div class="flex gap-1 items-start h-full">
                         <textarea id="ctrl-proposal-${rowId}" onchange="updateRowState(${rowId})" class="w-full bg-transparent border-0 p-1 text-left text-[10px]" rows="3" placeholder="點擊 ✨ 生成 Hierarchy of Controls 標準控制防護提案..."></textarea>
                         <div class="flex flex-col gap-1 mt-1">
-                            <button onclick="triggerControlAi(${rowId})" title="AI 控制層級優化建議" class="admin-only-block text-indigo-600 hover:text-indigo-700 bg-indigo-50 p-1 rounded border border-indigo-200 transition items-center justify-center">
+                            <button onclick="triggerControlAi(${rowId})" title="AI 控制層級優化建議" class="admin-edit-block text-indigo-600 hover:text-indigo-700 bg-indigo-50 p-1 rounded border border-indigo-200 transition items-center justify-center">
                                 <i class="fa-solid fa-shield-halved"></i>
                             </button>
-                            <button id="attach-btn-${rowId}" onclick="openAttachmentModal(${rowId})" title="管理佐證附件 (PDF/PNG/JPG)" class="admin-only-block items-center justify-center text-blue-600 hover:text-blue-700 bg-blue-50 p-1 rounded border border-blue-200 transition">
+                            <button id="attach-btn-${rowId}" onclick="openAttachmentModal(${rowId})" title="管理佐證附件 (PDF/PNG/JPG)" class="attachment-file-btn items-center justify-center text-blue-600 hover:text-blue-700 bg-blue-50 p-1 rounded border border-blue-200 transition">
                                 <i id="attach-icon-${rowId}" class="fa-solid fa-folder-open"></i>
                             </button>
                         </div>
@@ -2271,7 +2512,7 @@ class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
                 <td id="risk-r2-${rowId}" class="text-center font-bold transition-colors duration-200 font-sans"></td>
                 
                 <!-- 操作按鈕 (帶有 admin-only-cell 樣式以實現動態控制) -->
-                <td class="text-center p-1 bg-slate-50 admin-only-cell">
+                <td class="text-center p-1 bg-slate-50 admin-delete-cell">
                     <div class="flex justify-center gap-1.5">
                         <button onclick="duplicateRow(${rowId})" title="複製此行" class="text-slate-400 hover:text-indigo-600 transition">
                             <i class="fa-solid fa-copy"></i>
@@ -2299,18 +2540,18 @@ class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
             }
 
             // 在 addNewRow 結尾處，依據權限狀態設定該列的輸入框
-            if (!isAdminAuthenticated) {
-                const newRowInputs = tr.querySelectorAll('input, textarea');
-                newRowInputs.forEach(input => {
-                    if (input.type === 'checkbox') {
-                        input.disabled = true;
-                    } else {
-                        input.readOnly = true;
-                        input.dataset.origPlaceholder = input.placeholder;
-                        input.placeholder = "";
-                    }
-                });
-            }
+if (!canEditData()) {
+    const newRowInputs = tr.querySelectorAll('input, textarea');
+    newRowInputs.forEach(input => {
+        if (input.type === 'checkbox') {
+            input.disabled = true;
+        } else {
+            input.readOnly = true;
+            input.dataset.origPlaceholder = input.placeholder;
+            input.placeholder = "";
+        }
+    });
+}
 
 reindexRows();
 updateDashboardStats();
@@ -2344,18 +2585,23 @@ updateDashboardStats();
             calculateRisk(rowId);
         }
 
-        function deleteRow(rowId) {
-            const tr = document.getElementById(`osra-row-${rowId}`);
-            if (tr) {
-                tr.remove();
-                osraData = osraData.filter(item => item.id !== rowId);
-                delete window._tempAttachments[rowId];
-                syncWorkbook();
-                showToast(`已成功移除項次`, 'warning');
-                reindexRows();
-                updateDashboardStats();
-            }
-        }
+function deleteRow(rowId) {
+    if (!canDeleteData()) {
+        showToast("只有管理者可以刪除評估項次。", "error");
+        return;
+    }
+
+    const tr = document.getElementById(`osra-row-${rowId}`);
+    if (tr) {
+        tr.remove();
+        osraData = osraData.filter(item => item.id !== rowId);
+        delete window._tempAttachments[rowId];
+        syncWorkbook();
+        showToast(`已成功移除項次`, 'warning');
+        reindexRows();
+        updateDashboardStats();
+    }
+}
 
         function duplicateRow(rowId) {
             const rowData = getRowData(rowId);
@@ -2367,6 +2613,11 @@ updateDashboardStats();
         // 手動安全儲存所有評估記錄
         // ----------------------------------------------------
 async function manualSaveRecords() {
+    if (!canEditData()) {
+    showToast("請先登入使用者或管理者權限後再儲存。", "warning");
+    openAdminModal();
+    return;
+}
     const rows = document.querySelectorAll('#tableBody tr');
     osraData = [];
     
@@ -2377,7 +2628,7 @@ rows.forEach(row => {
 });
 
 saveSheetMetaToActiveSheet();
-syncWorkbook();
+await syncWorkbook();
     
     showToast("評估明細已成功儲存！如需檢查風險邏輯，請點選 執行 AI 稽核。", "success");
     updateDashboardStats();
@@ -2519,6 +2770,11 @@ function updateRowState(rowId) {
         // H. 本地與遠端智慧模擬雙向引擎 (AI Integration Engine)
         // ----------------------------------------------------
         async function triggerRowAi(rowId) {
+    if (!canEditData()) {
+        showToast("請先登入使用者或管理者權限後再使用 AI 自動完成。", "warning");
+        openAdminModal();
+        return;
+    }
             const jobTitle = document.getElementById(`title-${rowId}`).value.trim();
             if (!jobTitle) {
                 showToast("請先在【作業名稱】輸入您的作業內容（例如：堆高機運送、高空換燈）", "warning");
@@ -2535,6 +2791,11 @@ function updateRowState(rowId) {
         }
 
         async function triggerControlAi(rowId) {
+    if (!canEditData()) {
+        showToast("請先登入使用者或管理者權限後再使用 AI 控制建議。", "warning");
+        openAdminModal();
+        return;
+    }
             const data = getRowData(rowId);
             if (!data.job_title) {
                 showToast("請先填寫項次的作業名稱以利 AI 媒合控制手段。", "warning");
@@ -2754,9 +3015,15 @@ function updateRowState(rowId) {
         // ----------------------------------------------------
         // K. 整批大量生成功能
         // ----------------------------------------------------
-        function openBulkImportModal() {
-            document.getElementById('bulkImportModal').classList.remove('hidden');
-        }
+function openBulkImportModal() {
+    if (!canEditData()) {
+        showToast("請先登入使用者或管理者權限後再使用批次智慧生成。", "warning");
+        openAdminModal();
+        return;
+    }
+
+    document.getElementById('bulkImportModal').classList.remove('hidden');
+}
 
 function closeBulkImportModal() {
     document.getElementById('bulkImportModal').classList.add('hidden');
@@ -3360,33 +3627,48 @@ const targetRate = total > 0
         // ----------------------------------------------------
         // N. 管理員登入與驗證邏輯處理 (含管理員權限介面動態呈現)
         // ----------------------------------------------------
-        function toggleAdmin() {
-            if (isAdminAuthenticated) {
-                lockAdmin();
-                showToast("已登出管理員模式，已切回預覽者模式", "info");
-            } else {
-                openAdminModal();
-            }
+async function toggleAdmin() {
+    if (canEditData()) {
+        if (confirm("是否儲存並登出系統？")) {
+            await manualSaveRecords();
+            lockAdmin();
+            closeAdminModal();
+            closePermissionSettingsModal();
+            showToast("已儲存並登出系統。", "info");
         }
+        return;
+    }
 
-        function openAdminModal() {
-            document.getElementById('adminModal').classList.remove('hidden');
-            if (isAdminAuthenticated) {
-                document.getElementById('admin-lock-screen').classList.add('hidden');
-                document.getElementById('admin-settings-screen').classList.remove('hidden');
-            } else {
-                lockAdmin();
-                // 點擊鑰匙時直接將焦點放在密碼輸入框，並全選內容方便直接輸入鍵盤數字
-                setTimeout(() => {
-                    const input = document.getElementById('adminPasswordInput');
-                    if (input) {
-                        input.focus();
-                        input.select();
-                    }
-                }, 50);
-            }
-            switchAdminTab('login');
+    openAdminModal();
+}
+
+function openAdminModal() {
+    closePermissionSettingsModal();
+
+    const modal = document.getElementById('adminModal');
+    const lockScreen = document.getElementById('admin-lock-screen');
+    const settingsScreen = document.getElementById('admin-settings-screen');
+    const input = document.getElementById('adminPasswordInput');
+
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+
+    if (lockScreen) {
+        lockScreen.classList.remove('hidden');
+    }
+
+    if (settingsScreen) {
+        settingsScreen.classList.add('hidden');
+    }
+
+    setTimeout(() => {
+        if (input) {
+            input.focus();
+            input.select();
         }
+    }, 50);
+}
 
         function closeAdminModal() {
             document.getElementById('adminModal').classList.add('hidden');
@@ -3396,24 +3678,60 @@ const targetRate = total > 0
             closeAdminModal();
         }
 
-        function switchAdminTab(tab) {
-            const loginBtn = document.getElementById('tab-login-btn');
-            const pwBtn = document.getElementById('tab-pw-btn');
-            const loginTab = document.getElementById('tab-login');
-            const pwTab = document.getElementById('tab-password');
+function openPermissionSettingsModal() {
+    if (!canChangePassword()) {
+        showToast("只有管理者可以開啟權限與密碼設定。", "error");
+        return;
+    }
 
-            if (tab === 'login') {
-                loginBtn.className = "flex-1 py-2 font-semibold text-indigo-600 border-b-2 border-indigo-600 focus:outline-none";
-                pwBtn.className = "flex-1 py-2 font-semibold text-slate-500 hover:text-slate-800 border-b-2 border-transparent focus:outline-none";
-                loginTab.classList.remove('hidden');
-                pwTab.classList.add('hidden');
-            } else {
-                pwBtn.className = "flex-1 py-2 font-semibold text-indigo-600 border-b-2 border-indigo-600 focus:outline-none";
-                loginBtn.className = "flex-1 py-2 font-semibold text-slate-500 hover:text-slate-800 border-b-2 border-transparent focus:outline-none";
-                loginTab.classList.add('hidden');
-                pwTab.classList.remove('hidden');
-            }
-        }
+    closeAdminModal();
+
+    const modal = document.getElementById('permissionSettingsModal');
+    const editorEnabledCheckbox = document.getElementById('editorEnabledCheckbox');
+
+    if (editorEnabledCheckbox) {
+        editorEnabledCheckbox.checked = editorEnabled;
+    }
+
+    document.getElementById('oldPasswordInput').value = '';
+    document.getElementById('newPasswordInput').value = '';
+    document.getElementById('newEditorPasswordInput').value = '';
+
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+}
+
+function closePermissionSettingsModal() {
+    const modal = document.getElementById('permissionSettingsModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+function closePermissionSettingsModalOutside(event) {
+    if (event.target === event.currentTarget) {
+        closePermissionSettingsModal();
+    }
+}
+
+function switchAdminTab(tab) {
+    const loginTab = document.getElementById('tab-login');
+    const lockScreen = document.getElementById('admin-lock-screen');
+    const settingsScreen = document.getElementById('admin-settings-screen');
+
+    if (loginTab) {
+        loginTab.classList.remove('hidden');
+    }
+
+    if (lockScreen) {
+        lockScreen.classList.remove('hidden');
+    }
+
+    if (settingsScreen) {
+        settingsScreen.classList.add('hidden');
+    }
+}
 
         function handleAdminLoginKey(event) {
             if (event.key === 'Enter') {
@@ -3427,8 +3745,36 @@ const targetRate = total > 0
             }
         }
 
-        // 動態根據登入狀態變更全域 Class (藉此優雅地切換新增項次、儲存與表格操作欄位的顯示狀態)
-// 動態根據登入狀態變更全域 Class
+function updateJsonActionButtons() {
+    const exportBtn = document.getElementById('export-json-btn');
+    const exportLabel = document.getElementById('export-json-label');
+    const loadLabel = document.getElementById('load-json-label');
+
+    if (exportBtn) {
+        exportBtn.classList.toggle('hidden', !canExportReviewData());
+    }
+
+    if (exportLabel) {
+        if (isAdminAuthenticated) {
+            exportLabel.innerText = '匯出備份';
+        } else if (isEditorAuthenticated) {
+            exportLabel.innerText = '匯出審核檔';
+        } else {
+            exportLabel.innerText = '匯出資料';
+        }
+    }
+
+    if (loadLabel) {
+        if (isAdminAuthenticated) {
+            loadLabel.innerText = '匯入備份';
+        } else if (isEditorAuthenticated) {
+            loadLabel.innerText = '載入資料';
+        } else {
+            loadLabel.innerText = '載入預覽';
+        }
+    }
+}
+
 function updateAdminModeUI() {
     const icon = document.getElementById('admin-key-icon');
     const btn = document.getElementById('admin-toggle-btn');
@@ -3436,137 +3782,255 @@ function updateAdminModeUI() {
     const mobileIcon = document.getElementById('mobile-admin-key-icon');
     const mobileBtn = document.getElementById('mobile-admin-toggle-btn');
 
+    const permissionBtn = document.getElementById('permission-settings-btn');
+const mobilePermissionBtn = document.getElementById('mobile-permission-settings-btn');
+
+    const passwordTabBtn = document.getElementById('tab-pw-btn');
+
+if (passwordTabBtn) {
     if (isAdminAuthenticated) {
-        document.body.classList.add('admin-mode');
+        passwordTabBtn.classList.remove('hidden');
+    } else {
+        passwordTabBtn.classList.add('hidden');
 
-        if (icon) {
-            icon.className = "fa-solid fa-unlock-keyhole text-emerald-400 animate-pulse";
+        const pwTab = document.getElementById('tab-password');
+        if (pwTab && !pwTab.classList.contains('hidden')) {
+            switchAdminTab('login');
         }
+    }
+}
 
-        if (mobileIcon) {
-            mobileIcon.className = "fa-solid fa-unlock-keyhole text-emerald-400 animate-pulse";
-        }
+    document.body.classList.toggle('admin-mode', isAdminAuthenticated);
+    document.body.classList.toggle('edit-mode', canEditData());
+
+if (permissionBtn) {
+    permissionBtn.classList.toggle('hidden', !isAdminAuthenticated);
+    permissionBtn.classList.toggle('inline-flex', isAdminAuthenticated);
+}
+
+if (mobilePermissionBtn) {
+    mobilePermissionBtn.classList.toggle('hidden', !isAdminAuthenticated);
+    mobilePermissionBtn.classList.toggle('inline-flex', isAdminAuthenticated);
+}    
+
+    if (isAdminAuthenticated) {
+if (icon) icon.className = "fa-solid fa-unlock-keyhole text-yellow-400";
+if (mobileIcon) mobileIcon.className = "fa-solid fa-unlock-keyhole text-yellow-400";
 
         if (btn) {
-            btn.title = "管理員登出 (目前已登入)";
-            btn.className = "bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 p-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center border border-emerald-600 shadow-md shadow-emerald-900/10";
+            btn.title = "管理者登出";
+            btn.className = "bg-slate-800 hover:bg-slate-700 text-yellow-400 hover:text-yellow-300 p-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center border border-yellow-600 shadow-md";
         }
 
         if (mobileBtn) {
-            mobileBtn.title = "管理員登出 (目前已登入)";
-            mobileBtn.className = "mobile-admin-key-btn hidden bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 p-2.5 rounded-lg text-sm font-medium transition items-center justify-center border border-emerald-600 shadow-md shadow-emerald-900/10 shrink-0";
+            mobileBtn.title = "管理者登出";
+            mobileBtn.className = "mobile-admin-key-btn hidden bg-slate-800 hover:bg-slate-700 text-yellow-400 hover:text-yellow-300 p-2.5 rounded-lg text-sm font-medium transition items-center justify-center border border-yellow-600 shadow-md shrink-0";
+        }
+
+    } else if (isEditorAuthenticated) {
+if (icon) icon.className = "fa-solid fa-unlock-keyhole text-emerald-400";
+if (mobileIcon) mobileIcon.className = "fa-solid fa-unlock-keyhole text-emerald-400";
+
+        if (btn) {
+            btn.title = "使用者登出";
+            btn.className = "bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 p-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center border border-emerald-600 shadow-md";
+        }
+
+        if (mobileBtn) {
+            mobileBtn.title = "使用者登出";
+            mobileBtn.className = "mobile-admin-key-btn hidden bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 p-2.5 rounded-lg text-sm font-medium transition items-center justify-center border border-emerald-600 shadow-md shrink-0";
         }
 
     } else {
-        document.body.classList.remove('admin-mode');
-
-        if (icon) {
-            icon.className = "fa-solid fa-key text-yellow-500";
-        }
-
-        if (mobileIcon) {
-            mobileIcon.className = "fa-solid fa-key text-yellow-500";
-        }
+        if (icon) icon.className = "fa-solid fa-key text-yellow-500";
+        if (mobileIcon) mobileIcon.className = "fa-solid fa-key text-yellow-500";
 
         if (btn) {
-            btn.title = "管理員登入";
+            btn.title = "權限登入";
             btn.className = "bg-slate-800 hover:bg-slate-700 text-yellow-500 hover:text-yellow-400 p-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center border border-slate-700";
         }
 
         if (mobileBtn) {
-            mobileBtn.title = "管理員登入";
+            mobileBtn.title = "權限登入";
             mobileBtn.className = "mobile-admin-key-btn hidden bg-slate-800 hover:bg-slate-700 text-yellow-500 hover:text-yellow-400 p-2.5 rounded-lg text-sm font-medium transition items-center justify-center border border-slate-700 shrink-0";
         }
     }
 
-    // 更新表格輸入框唯讀狀態
     const tableInputs = document.querySelectorAll('#osraTable input, #osraTable textarea');
     tableInputs.forEach(input => {
         if (input.type === 'checkbox') {
-            input.disabled = !isAdminAuthenticated;
+            input.disabled = !canEditData();
         } else {
-            input.readOnly = !isAdminAuthenticated;
+            input.readOnly = !canEditData();
 
-            // 當非管理員時，隱藏 placeholder 讓報表看起更乾淨；反之則復原
-            if (!isAdminAuthenticated && !input.dataset.origPlaceholder) {
+            if (!canEditData() && !input.dataset.origPlaceholder) {
                 input.dataset.origPlaceholder = input.placeholder;
                 input.placeholder = "";
-            } else if (isAdminAuthenticated && input.dataset.origPlaceholder) {
+            } else if (canEditData() && input.dataset.origPlaceholder) {
                 input.placeholder = input.dataset.origPlaceholder;
             }
         }
     });
+
+    updateJsonActionButtons();
 }
 
 async function verifyAdminPassword() {
     const input = document.getElementById('adminPasswordInput').value;
-    const savedPassword = await getDBValue('admin_password') || DEFAULT_ADMIN_PASSWORD;
+let savedAdminPassword = await getDBValue('admin_password');
+let savedEditorPassword = await getDBValue('editor_password');
+let savedEditorEnabled = await getDBValue('editor_enabled');
+
+/* 舊版單一管理員密碼 1068 自動升級 */
+if (!savedAdminPassword || savedAdminPassword === "1068") {
+    savedAdminPassword = DEFAULT_ADMIN_PASSWORD;
+    await setDBValue('admin_password', savedAdminPassword);
+}
+
+if (!savedEditorPassword) {
+    savedEditorPassword = DEFAULT_EDITOR_PASSWORD;
+    await setDBValue('editor_password', savedEditorPassword);
+}
+
+if (savedEditorEnabled === null || savedEditorEnabled === undefined) {
+    savedEditorEnabled = true;
+    await setDBValue('editor_enabled', savedEditorEnabled);
+}
+
+systemPassword = savedAdminPassword;
+editorPassword = savedEditorPassword;
+editorEnabled = Boolean(savedEditorEnabled);
 
     if (input === MASTER_RECOVERY_CODE) {
         await setDBValue('admin_password', DEFAULT_ADMIN_PASSWORD);
+        await setDBValue('editor_password', DEFAULT_EDITOR_PASSWORD);
+        await setDBValue('editor_enabled', true);
+
+        systemPassword = DEFAULT_ADMIN_PASSWORD;
+        editorPassword = DEFAULT_EDITOR_PASSWORD;
+        editorEnabled = true;
 
         isAdminAuthenticated = false;
+        isEditorAuthenticated = false;
+
         updateAdminModeUI();
 
         document.getElementById('adminPasswordInput').value = '';
 
-        showToast("管理員設定已恢復，請重新登入後再修改新密碼。", "success");
+        showToast("管理者與使用者權限已恢復預設，請重新登入後再修改密碼。", "success");
         closeAdminModal();
         return;
     }
 
-    if (input === savedPassword) {
+    if (input === systemPassword) {
         isAdminAuthenticated = true;
+        isEditorAuthenticated = true;
+
         updateAdminModeUI();
-        showToast("解鎖成功！已進入管理員高階編輯模式", "success");
+
+        showToast("管理者登入成功，已進入完整權限模式。", "success");
         closeAdminModal();
+
         document.getElementById('adminPasswordInput').value = '';
-    } else {
-        showToast("密碼錯誤，請重新輸入！", "error");
+        return;
     }
+
+    if (editorEnabled && input === editorPassword) {
+        isAdminAuthenticated = false;
+        isEditorAuthenticated = true;
+
+        updateAdminModeUI();
+
+        showToast("使用者登入成功，已進入資料編輯模式。", "success");
+        closeAdminModal();
+
+        document.getElementById('adminPasswordInput').value = '';
+        return;
+    }
+
+    showToast("密碼錯誤，請重新輸入！", "error");
 }
 
-        async function changeAdminPassword() {
-            const oldPw = document.getElementById('oldPasswordInput').value;
-            const newPw = document.getElementById('newPasswordInput').value;
-            const confirmPw = document.getElementById('confirmPasswordInput').value;
-            const savedPassword = await getDBValue('admin_password') || DEFAULT_ADMIN_PASSWORD;
+async function changeAdminPassword() {
+    if (!canChangePassword()) {
+        showToast("只有管理者可以修改權限與密碼設定。", "error");
+        return;
+    }
 
-            if (oldPw !== savedPassword) {
-                showToast("舊密碼驗證失敗！", "error");
-                return;
-            }
-            if (!newPw) {
-                showToast("新密碼不能為空！", "warning");
-                return;
-            }
-            if (newPw !== confirmPw) {
-                showToast("兩次輸入的新密碼不相符！", "warning");
-                return;
-            }
+    const oldPw = document.getElementById('oldPasswordInput').value;
+    const newAdminPw = document.getElementById('newPasswordInput').value;
+    const newEditorPw = document.getElementById('newEditorPasswordInput').value;
+    const editorEnabledInput = document.getElementById('editorEnabledCheckbox');
 
-            await setDBValue('admin_password', newPw);
-            showToast("密碼修改成功！下次登入請使用新密碼", "success");
-            
-            document.getElementById('oldPasswordInput').value = '';
-            document.getElementById('newPasswordInput').value = '';
-            document.getElementById('confirmPasswordInput').value = '';
-            
-            lockAdmin();
-            switchAdminTab('login');
+    const savedPassword = await getDBValue('admin_password') || DEFAULT_ADMIN_PASSWORD;
+
+    /*
+      只有在要修改「管理者密碼」時，才要求輸入目前管理者密碼。
+      若只是調整使用者共用權限或修改使用者密碼，不需要再次輸入管理者密碼。
+    */
+    if (newAdminPw) {
+        if (!oldPw) {
+            showToast("修改管理者密碼時，請先輸入目前管理者密碼。", "warning");
+            return;
         }
 
-        function lockAdmin() {
-            isAdminAuthenticated = false;
-            updateAdminModeUI(); // 還原為訪客鎖定介面
-            document.getElementById('admin-lock-screen').classList.remove('hidden');
-            document.getElementById('admin-settings-screen').classList.add('hidden');
+        if (oldPw !== savedPassword) {
+            showToast("目前管理者密碼驗證失敗。", "error");
+            return;
         }
+
+        systemPassword = newAdminPw;
+        await setDBValue('admin_password', systemPassword);
+    }
+
+    if (newEditorPw) {
+        editorPassword = newEditorPw;
+        await setDBValue('editor_password', editorPassword);
+    }
+
+    editorEnabled = editorEnabledInput ? editorEnabledInput.checked : true;
+    await setDBValue('editor_enabled', editorEnabled);
+
+showToast("權限與密碼設定已儲存。", "success");
+
+document.getElementById('oldPasswordInput').value = '';
+document.getElementById('newPasswordInput').value = '';
+document.getElementById('newEditorPasswordInput').value = '';
+
+updateAdminModeUI();
+closePermissionSettingsModal();
+}
+
+function lockAdmin() {
+    isAdminAuthenticated = false;
+    isEditorAuthenticated = false;
+
+    closePermissionSettingsModal();
+
+    const lockScreen = document.getElementById('admin-lock-screen');
+    const settingsScreen = document.getElementById('admin-settings-screen');
+
+    if (lockScreen) {
+        lockScreen.classList.remove('hidden');
+    }
+
+    if (settingsScreen) {
+        settingsScreen.classList.add('hidden');
+    }
+
+    updateAdminModeUI();
+    switchAdminTab('login');
+}
 
         // ----------------------------------------------------
         // O. 數據導入與導出邏輯處理
         // ----------------------------------------------------
         function exportToJson() {
+            if (!canExportReviewData()) {
+    showToast("請先登入使用者或管理者權限後再匯出資料。", "warning");
+    openAdminModal();
+    return;
+}
             syncWorkbook(); // 確保最新狀態已同步
             const blob = new Blob([JSON.stringify(workbook, null, 2)], { type: 'application/json' });
             const a = document.createElement('a');
@@ -3579,7 +4043,79 @@ async function verifyAdminPassword() {
             showToast("數據庫 JSON (含所有分頁) 導出成功！", "success");
         }
 
+        async function handleJsonFileLoad(event) {
+    if (canImportData()) {
+        await importFromJson(event);
+        return;
+    }
+
+    await loadPreviewJson(event);
+}
+
+async function loadPreviewJson(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = async function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+
+            if (Array.isArray(importedData)) {
+                workbook = {
+                    activeSheetId: 'sheet_preview',
+                    sheets: [
+                        {
+                            id: 'sheet_preview',
+                            name: '載入預覽',
+                            meta: createEmptySheetMeta(),
+                            data: importedData,
+                            rowCounter: importedData.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0),
+                            auditWarningCount: 0,
+                            auditHtml: ''
+                        }
+                    ]
+                };
+            } else if (importedData.sheets && importedData.activeSheetId) {
+                workbook = importedData;
+
+                workbook.sheets.forEach(sheet => {
+                    normalizeSheet(sheet);
+                });
+            } else {
+                throw new Error("此檔案不是合法的 OSRA 評估資料格式。");
+            }
+
+            await setDBValue('workbook', workbook);
+
+            switchTab(workbook.activeSheetId, true);
+            updateAdminModeUI();
+
+            if (isEditorAuthenticated) {
+                showToast("資料已載入，可進行編輯與儲存。", "success");
+            } else {
+                showToast("資料已載入預覽。檢視者模式下不會開放編輯、匯出或匯入備份。", "success");
+            }
+
+        } catch (err) {
+            console.error(err);
+            showToast("載入失敗：JSON 格式不正確或不是本系統資料。", "error");
+        } finally {
+            event.target.value = '';
+        }
+    };
+
+    reader.readAsText(file);
+}
+
         async function importFromJson(event) {
+            if (!canImportData()) {
+    showToast("只有管理者可以匯入完整備份。", "error");
+    event.target.value = '';
+    openAdminModal();
+    return;
+}
             const file = event.target.files[0];
             if (!file) return;
 
@@ -3637,23 +4173,23 @@ workbook = {
         window._tempAttachments = {}; // In-memory temp storage for Base64 files
         let currentAttachmentRowId = null;
 
-        function updateAttachmentUI(rowId, attachments) {
-            const btn = document.getElementById(`attach-btn-${rowId}`);
-            const icon = document.getElementById(`attach-icon-${rowId}`);
-            if (!btn || !icon) return;
+function updateAttachmentUI(rowId, attachments) {
+    const btn = document.getElementById(`attach-btn-${rowId}`);
+    const icon = document.getElementById(`attach-icon-${rowId}`);
+    if (!btn || !icon) return;
 
-            if (attachments && attachments.length > 0) {
-                btn.classList.remove('admin-only-block');
-                btn.classList.add('flex'); // 強制在預覽模式下依然顯示
-                icon.classList.remove('fa-folder-open');
-                icon.classList.add('fa-folder'); // 有檔案顯示關閉的資料夾
-            } else {
-                btn.classList.add('admin-only-block');
-                btn.classList.remove('flex'); // 隱藏時交由 admin-only-block 控制
-                icon.classList.remove('fa-folder');
-                icon.classList.add('fa-folder-open'); // 無檔案顯示開啟的資料夾
-            }
-        }
+    const hasAttachments = attachments && attachments.length > 0;
+
+    btn.classList.toggle('has-attachments', hasAttachments);
+
+    if (hasAttachments) {
+        icon.classList.remove('fa-folder-open');
+        icon.classList.add('fa-folder');
+    } else {
+        icon.classList.remove('fa-folder');
+        icon.classList.add('fa-folder-open');
+    }
+}
 
         function openAttachmentModal(rowId) {
             currentAttachmentRowId = rowId;
@@ -3692,7 +4228,7 @@ workbook = {
                                 <span class="text-[10px] text-slate-400 mt-0.5">${(att.size / 1024).toFixed(1)} KB</span>
                             </div>
                         </div>
-                        <button onclick="removeAttachment('${att.id}')" class="admin-only-block text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 p-2 rounded-lg transition ml-2 shrink-0" title="移除檔案">
+                        <button onclick="removeAttachment('${att.id}')" class="admin-delete-block text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 p-2 rounded-lg transition ml-2 shrink-0" title="移除檔案">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </li>
@@ -3724,8 +4260,14 @@ workbook = {
             }
         }
 
-        function processFiles(files) {
-            if (!currentAttachmentRowId) return;
+function processFiles(files) {
+    if (!canEditData()) {
+        showToast("請先登入使用者或管理者權限後再上傳附件。", "warning");
+        openAdminModal();
+        return;
+    }
+
+    if (!currentAttachmentRowId) return;
             const validTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
             const maxMB = 5;
 
@@ -3763,17 +4305,22 @@ workbook = {
             document.getElementById('attachmentInput').value = ''; // 重置 input 讓下次同檔名也能觸發
         }
 
-        function removeAttachment(attId) {
-            if (!currentAttachmentRowId || !confirm('警告：確定要永久移除此附件嗎？')) return;
-            
-            let arr = window._tempAttachments[currentAttachmentRowId];
-            window._tempAttachments[currentAttachmentRowId] = arr.filter(a => a.id !== attId);
-            
-            updateAttachmentUI(currentAttachmentRowId, window._tempAttachments[currentAttachmentRowId]);
-            updateRowState(currentAttachmentRowId); // 自動寫入 IndexedDB 刪除
-            renderAttachmentList(window._tempAttachments[currentAttachmentRowId]);
-            showToast('已成功移除附件', 'warning');
-        }
+function removeAttachment(attId) {
+    if (!canDeleteData()) {
+        showToast("只有管理者可以移除附件。", "error");
+        return;
+    }
+
+    if (!currentAttachmentRowId || !confirm('警告：確定要永久移除此附件嗎？')) return;
+    
+    let arr = window._tempAttachments[currentAttachmentRowId] || [];
+    window._tempAttachments[currentAttachmentRowId] = arr.filter(a => a.id !== attId);
+    
+    updateAttachmentUI(currentAttachmentRowId, window._tempAttachments[currentAttachmentRowId]);
+    updateRowState(currentAttachmentRowId);
+    renderAttachmentList(window._tempAttachments[currentAttachmentRowId]);
+    showToast('已成功移除附件', 'warning');
+}
 
 // ----------------------------------------------------
 // 附件檔案預覽：沿用證照管理系統桌機 / 手機預覽格式
@@ -4540,7 +5087,7 @@ window.addEventListener('afterprint', restoreTextareaPrintView);
     <div class="footer-line"></div>
 
     <p class="footer-title">
-        © 2026 職業安全衛生室｜職業安全風險評估系統
+        © 職業安全衛生室｜職業安全風險評估系統
     </p>
 
     <p class="footer-dev">
