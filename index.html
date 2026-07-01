@@ -142,6 +142,40 @@ table.osra-table .sticky-title-col textarea {
             animation: pulse-gold 2s infinite;
         }
 
+/* 權限與密碼設定：密碼輸入框統一為績效管理系統視覺比例 */
+.permission-password-input {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    background-color: #f1f5f9;
+    border: none;
+    border-radius: 0.5rem;
+    outline: none;
+
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 400;
+
+    color: #334155;
+    text-align: left;
+    letter-spacing: 0.01em;
+
+    transition: all 0.2s ease;
+}
+
+.permission-password-input:focus {
+    box-shadow: 0 0 0 2px #6366f1;
+}
+
+.permission-password-input::placeholder {
+    color: #94a3b8;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    opacity: 1;
+}
+
 /* 桌機版預設：手機版標題區權限按鈕一律隱藏 */
 nav #mobile-admin-toggle-btn,
 nav #mobile-permission-settings-btn {
@@ -1467,29 +1501,29 @@ table.osra-table textarea::placeholder {
             <div class="space-y-2">
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">目前管理者密碼</label>
-                    <input type="password"
-                           id="oldPasswordInput"
-                           placeholder="••••••"
-                           onkeydown="handlePasswordChangeKey(event)"
-                           class="w-full px-4 py-2 bg-slate-100 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 transition outline-none text-sm">
+<input type="password"
+       id="oldPasswordInput"
+       placeholder="••••••"
+       onkeydown="handlePasswordChangeKey(event)"
+       class="permission-password-input">
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">新管理者密碼</label>
-                    <input type="password"
-                           id="newPasswordInput"
-                           placeholder="••••••"
-                           onkeydown="handlePasswordChangeKey(event)"
-                           class="w-full px-4 py-2 bg-slate-100 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 transition outline-none text-sm">
+<input type="password"
+       id="newPasswordInput"
+       placeholder="••••••"
+       onkeydown="handlePasswordChangeKey(event)"
+       class="permission-password-input">
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">新使用者密碼</label>
-                    <input type="password"
-                           id="newEditorPasswordInput"
-                           placeholder="••••••"
-                           onkeydown="handlePasswordChangeKey(event)"
-                           class="w-full px-4 py-2 bg-slate-100 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 transition outline-none text-sm">
+<input type="password"
+       id="newEditorPasswordInput"
+       placeholder="••••••"
+       onkeydown="handlePasswordChangeKey(event)"
+       class="permission-password-input">
                 </div>
 
                 <label class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 cursor-pointer">
