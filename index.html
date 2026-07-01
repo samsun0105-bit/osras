@@ -142,6 +142,12 @@ table.osra-table .sticky-title-col textarea {
             animation: pulse-gold 2s infinite;
         }
 
+/* 桌機版預設：手機版標題區權限按鈕一律隱藏 */
+nav #mobile-admin-toggle-btn,
+nav #mobile-permission-settings-btn {
+    display: none !important;
+}
+
         /* 管理員模式動態控制顯示 */
 .admin-edit-block,
 .admin-create-sheet-block,
@@ -649,6 +655,21 @@ nav #mobile-admin-toggle-btn {
     justify-content: center;
 }
 
+/* 手機版：預覽者與使用者模式不顯示權限設定齒輪 */
+body:not(.admin-mode) nav #mobile-permission-settings-btn {
+    display: none !important;
+}
+
+/* 手機版：只有管理者模式顯示鎖頭旁的權限設定齒輪 */
+body.admin-mode nav #mobile-permission-settings-btn {
+    display: inline-flex !important;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+}
+
 /* 手機版：讓標題區左右排列更穩定 */
 nav h1 {
     font-size: 1.3rem;
@@ -928,15 +949,26 @@ table.osra-table textarea::placeholder {
                 <p class="text-slate-400 text-sm font-mono">OCCUPATIONAL SAFETY RISK ASSESSMENT SYSTEM</p>
             </div>
 
-            <!-- 手機版管理員登入鑰匙：只在手機標題區顯示 -->
-            <button
-                id="mobile-admin-toggle-btn"
-                onclick="toggleAdmin()"
-                class="mobile-admin-key-btn hidden bg-slate-800 hover:bg-slate-700 text-yellow-500 hover:text-yellow-400 p-2.5 rounded-lg text-sm font-medium transition items-center justify-center border border-slate-700 shrink-0"
-                title="管理員登入"
-            >
-                <i id="mobile-admin-key-icon" class="fa-solid fa-key"></i>
-            </button>
+<!-- 手機版管理員權限按鈕組：只在手機標題區顯示 -->
+<div class="flex items-center gap-2 shrink-0">
+    <button
+        id="mobile-admin-toggle-btn"
+        onclick="toggleAdmin()"
+        class="mobile-admin-key-btn hidden bg-slate-800 hover:bg-slate-700 text-yellow-500 hover:text-yellow-400 p-2.5 rounded-lg text-sm font-medium transition items-center justify-center border border-slate-700 shrink-0"
+        title="管理員登入"
+    >
+        <i id="mobile-admin-key-icon" class="fa-solid fa-key"></i>
+    </button>
+
+    <button
+        id="mobile-permission-settings-btn"
+        onclick="openPermissionSettingsModal()"
+        class="hidden bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-cyan-300 p-2.5 rounded-lg text-sm font-medium transition items-center justify-center border border-cyan-700 shrink-0"
+        title="權限與密碼設定"
+    >
+        <i class="fa-solid fa-gear"></i>
+    </button>
+</div>
         </div>
     </div>
 </div>
