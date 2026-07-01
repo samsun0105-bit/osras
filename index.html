@@ -634,6 +634,11 @@ nav #admin-toggle-btn {
     display: none !important;
 }
 
+/* 手機版：隱藏功能按鈕區裡原本的權限設定齒輪 */
+nav #permission-settings-btn {
+    display: none !important;
+}
+
 /* 手機版：顯示標題區右上角的管理員鑰匙 */
 nav #mobile-admin-toggle-btn {
     display: inline-flex !important;
@@ -940,6 +945,15 @@ table.osra-table textarea::placeholder {
             >
                 <i id="mobile-admin-key-icon" class="fa-solid fa-key"></i>
             </button>
+
+            <button
+    id="mobile-permission-settings-btn"
+    onclick="openPermissionSettingsModal()"
+    class="hidden bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-cyan-300 p-2.5 rounded-lg text-sm font-medium transition items-center justify-center border border-cyan-700 shrink-0"
+    title="權限與密碼設定"
+>
+    <i class="fa-solid fa-gear"></i>
+</button>
 
         </div>
     </div>
