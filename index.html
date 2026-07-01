@@ -649,14 +649,6 @@ nav #mobile-admin-toggle-btn {
     justify-content: center;
 }
 
-nav #mobile-permission-settings-btn {
-    width: 42px;
-    height: 42px;
-    padding: 0;
-    align-items: center;
-    justify-content: center;
-}
-
 /* 手機版：讓標題區左右排列更穩定 */
 nav h1 {
     font-size: 1.3rem;
@@ -945,16 +937,6 @@ table.osra-table textarea::placeholder {
             >
                 <i id="mobile-admin-key-icon" class="fa-solid fa-key"></i>
             </button>
-
-            <button
-    id="mobile-permission-settings-btn"
-    onclick="openPermissionSettingsModal()"
-    class="hidden bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-cyan-300 p-2.5 rounded-lg text-sm font-medium transition items-center justify-center border border-cyan-700 shrink-0"
-    title="權限與密碼設定"
->
-    <i class="fa-solid fa-gear"></i>
-</button>
-
         </div>
     </div>
 </div>
@@ -964,9 +946,9 @@ table.osra-table textarea::placeholder {
                 <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-sm">
                     <i class="fa-solid fa-print"></i> 列印 / PDF
                 </button>
-                <button onclick="openBulkImportModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-md shadow-indigo-900/10">
-                    <i class="fa-solid fa-file-import"></i> 批次智慧生成
-                </button>
+<button onclick="openBulkImportModal()" class="admin-delete-block bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition items-center gap-1.5 shadow-md shadow-indigo-900/10">
+    <i class="fa-solid fa-file-import"></i> 批次智慧生成
+</button>
 <button id="export-json-btn"
         onclick="exportToJson()"
         class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-md">
@@ -1437,63 +1419,73 @@ table.osra-table textarea::placeholder {
 <!-- 權限與密碼設定 Modal：僅管理者可開啟 -->
 <div id="permissionSettingsModal"
      onclick="closePermissionSettingsModalOutside(event)"
-     class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center hidden">
+     class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center hidden p-4">
     <div onclick="event.stopPropagation()"
-         class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-6 animate-fade-in mx-4">
-        <div class="flex justify-between items-center border-b pb-3">
-            <h3 class="font-bold text-lg text-slate-900 flex items-center gap-2">
-                <i class="fa-solid fa-gear text-cyan-600"></i>
-                權限與密碼設定
-            </h3>
-            <button onclick="closePermissionSettingsModal()" class="text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-        </div>
+         class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-fade-in mx-4">
+        <div class="p-5">
 
-        <div class="space-y-4 mt-4">
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">目前管理者密碼</label>
-                <input type="password"
-                       id="oldPasswordInput"
-                       placeholder="••••••"
-                       onkeydown="handlePasswordChangeKey(event)"
-                       class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
+            <div class="flex flex-col items-center text-center mb-3">
+                <div class="bg-yellow-50 p-2 rounded-full mb-2">
+                    <i class="fa-solid fa-key w-6 h-6 text-yellow-600 flex items-center justify-center text-lg"></i>
+                </div>
+                <h3 class="text-lg font-black text-slate-900">權限與密碼設定</h3>
+                <p class="text-xs text-slate-500 mt-1">僅管理者可修改密碼與使用者權限</p>
             </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">新管理者密碼</label>
-                <input type="password"
-                       id="newPasswordInput"
-                       placeholder="••••••"
-                       onkeydown="handlePasswordChangeKey(event)"
-                       class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
+            <div class="space-y-2">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">目前管理者密碼</label>
+                    <input type="password"
+                           id="oldPasswordInput"
+                           placeholder="••••••"
+                           onkeydown="handlePasswordChangeKey(event)"
+                           class="w-full px-4 py-2 bg-slate-100 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 transition outline-none text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">新管理者密碼</label>
+                    <input type="password"
+                           id="newPasswordInput"
+                           placeholder="••••••"
+                           onkeydown="handlePasswordChangeKey(event)"
+                           class="w-full px-4 py-2 bg-slate-100 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 transition outline-none text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">新使用者密碼</label>
+                    <input type="password"
+                           id="newEditorPasswordInput"
+                           placeholder="••••••"
+                           onkeydown="handlePasswordChangeKey(event)"
+                           class="w-full px-4 py-2 bg-slate-100 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 transition outline-none text-sm">
+                </div>
+
+                <label class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 cursor-pointer">
+                    <input type="checkbox" id="editorEnabledCheckbox" class="w-4 h-4 accent-indigo-600">
+                    <span class="text-sm font-bold text-slate-700">啟用使用者共用權限</span>
+                </label>
+
+                <p class="text-[11px] text-slate-400 leading-snug">
+                    使用者權限可編輯、上傳附件、儲存與匯出備份；刪除、匯入及權限設定仍限管理者。
+                </p>
+
+                <div class="flex space-x-2 pt-1">
+                    <button
+                        type="button"
+                        onclick="closePermissionSettingsModal()"
+                        class="flex-1 py-1.5 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200 transition text-xs">
+                        取消
+                    </button>
+
+                    <button
+                        type="button"
+                        onclick="changeAdminPassword()"
+                        class="flex-1 py-1.5 bg-yellow-500 text-white rounded-lg font-bold hover:bg-yellow-600 transition text-xs">
+                        儲存設定
+                    </button>
+                </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">新使用者密碼</label>
-                <input type="password"
-                       id="newEditorPasswordInput"
-                       placeholder="••••••"
-                       onkeydown="handlePasswordChangeKey(event)"
-                       class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
-            </div>
-
-            <label class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3 cursor-pointer">
-                <input type="checkbox" id="editorEnabledCheckbox" class="w-4 h-4 accent-indigo-600">
-                <span class="text-sm font-bold text-slate-700">啟用使用者共用權限</span>
-            </label>
-
-            <p class="text-xs text-slate-400 leading-relaxed">
-                使用者權限啟用後，可新增、編輯、批次智慧生成、新增與重新命名分頁、上傳附件、儲存資料與匯出審核用 JSON。
-            </p>
-
-            <button
-                type="button"
-                onclick="changeAdminPassword()"
-                class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow transition"
-            >
-                儲存設定
-            </button>
         </div>
     </div>
 </div>
@@ -2018,6 +2010,10 @@ function canRenameSheets() {
 }
 
 function canManageSheets() {
+    return isAdminAuthenticated;
+}
+
+function canUseBulkGenerate() {
     return isAdminAuthenticated;
 }
         
@@ -3030,8 +3026,8 @@ function updateRowState(rowId) {
         // K. 整批大量生成功能
         // ----------------------------------------------------
 function openBulkImportModal() {
-    if (!canEditData()) {
-        showToast("請先登入使用者或管理者權限後再使用批次智慧生成。", "warning");
+    if (!canUseBulkGenerate()) {
+        showToast("批次智慧生成僅限管理者使用。", "warning");
         openAdminModal();
         return;
     }
@@ -3061,6 +3057,12 @@ function closeBulkImportModalOutside(event) {
         }
 
         async function executeBulkGenerate() {
+    if (!canUseBulkGenerate()) {
+        showToast("批次智慧生成僅限管理者使用。", "warning");
+        closeBulkImportModal();
+        return;
+    }
+                
             const rawText = document.getElementById('bulkTasksInput').value;
             const tasks = rawText.split('\n').map(t => t.trim()).filter(t => t.length > 0);
 
@@ -3772,7 +3774,7 @@ function updateJsonActionButtons() {
         if (isAdminAuthenticated) {
             exportLabel.innerText = '匯出備份';
         } else if (isEditorAuthenticated) {
-            exportLabel.innerText = '匯出審核檔';
+            exportLabel.innerText = '匯出備份';
         } else {
             exportLabel.innerText = '匯出資料';
         }
