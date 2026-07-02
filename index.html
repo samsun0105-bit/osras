@@ -4266,6 +4266,12 @@ async function importFromJson(event) {
         try {
             const importedData = JSON.parse(e.target.result);
 
+            const importLabel = isAdminAuthenticated ? '匯入資料' : '載入資料';
+
+            if (!confirm(`${importLabel}將覆蓋目前所有紀錄，確定要繼續嗎？`)) {
+                return;
+            }
+
             applyImportedRiskAssessmentData(importedData);
 
             /*
@@ -4284,7 +4290,7 @@ async function importFromJson(event) {
             switchTab(workbook.activeSheetId, true);
             updateAdminModeUI();
 
-            showToast("JSON 資料載入成功！", "success");
+            showToast(`${importLabel}成功！`, "success");
 
         } catch (err) {
             console.error("載入資料失敗：", err);
