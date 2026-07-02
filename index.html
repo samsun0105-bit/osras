@@ -1532,7 +1532,7 @@ table.osra-table textarea::placeholder {
                 </label>
 
                 <p class="text-[11px] text-slate-400 leading-snug">
-                    使用者權限可編輯、上傳附件、儲存與匯出資料；刪除、匯入及權限設定仍限管理者。
+                    使用者權限可編輯、上傳附件、儲存、載入與匯出資料；刪除與權限設定仍限管理者。
                 </p>
 
                 <div class="flex space-x-2 pt-1">
@@ -2033,6 +2033,9 @@ let config = {
 let isAdminAuthenticated = false;
 let isEditorAuthenticated = false;
 
+/* 預覽載入模式：只暫存在目前頁面，不寫入 IndexedDB */
+let isPreviewDataMode = false;
+
 let systemPassword = DEFAULT_ADMIN_PASSWORD;
 let editorPassword = DEFAULT_EDITOR_PASSWORD;
 let editorEnabled = true;
@@ -2056,7 +2059,7 @@ function canChangePassword() {
 }
 
 function canImportData() {
-    return isAdminAuthenticated;
+    return isAdminAuthenticated || isEditorAuthenticated;
 }
 
 function canExportReviewData() {
@@ -2091,6 +2094,14 @@ function syncWorkbook() {
         sheet.meta = getSheetMetaFromForm();
         sheet.data = JSON.parse(JSON.stringify(osraData));
         sheet.rowCounter = rowCounter;
+    }
+
+    /*
+     * 預覽載入模式只更新目前頁面記憶體，
+     * 不寫入 IndexedDB，避免預覽資料覆蓋正式資料。
+     */
+    if (isPreviewDataMode) {
+        return Promise.resolve();
     }
 
     return setDBValue('workbook', workbook);
@@ -3963,8 +3974,7 @@ let savedAdminPassword = await getDBValue('admin_password');
 let savedEditorPassword = await getDBValue('editor_password');
 let savedEditorEnabled = await getDBValue('editor_enabled');
 
-/* 舊版單一管理員密碼 1068 自動升級 */
-if (!savedAdminPassword || savedAdminPassword === "1068") {
+if (!savedAdminPassword) {
     savedAdminPassword = DEFAULT_ADMIN_PASSWORD;
     await setDBValue('admin_password', savedAdminPassword);
 }
@@ -4107,23 +4117,89 @@ function lockAdmin() {
         // ----------------------------------------------------
         // O. 數據導入與導出邏輯處理
         // ----------------------------------------------------
-        function exportToJson() {
-            if (!canExportReviewData()) {
-    showToast("請先登入使用者或管理者權限後再匯出資料。", "warning");
-    openAdminModal();
-    return;
-}
-            syncWorkbook(); // 確保最新狀態已同步
-            const blob = new Blob([JSON.stringify(workbook, null, 2)], { type: 'application/json' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `職業安全風險評估系統_RAS_${new Date().toISOString().slice(0,10)}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+function exportToJson() {
+    if (!canExportReviewData()) {
+        showToast("請先登入使用者或管理者權限後再匯出資料。", "warning");
+        openAdminModal();
+        return;
+    }
 
-            showToast("數據庫 JSON (含所有分頁) 導出成功！", "success");
+    syncWorkbook();
+
+    const exportDate = new Date().toISOString().slice(0, 10);
+
+    const exportData = {
+        version: "risk-assessment-system-json-v2",
+        exportType: "unified-data",
+        exportedAt: new Date().toISOString(),
+
+        workbook: workbook,
+
+        /*
+         * 統一版 JSON 不匯出：
+         * admin_password
+         * editor_password
+         * editor_enabled
+         * apiKey
+         */
+        config: {}
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: 'application/json'
+    });
+
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `職安風險評估RAS_${exportDate}.json`;
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    showToast("JSON 資料已匯出。", "success");
+}
+
+function applyImportedRiskAssessmentData(importedData) {
+    const rawData = importedData && importedData.version === "risk-assessment-system-json-v2"
+        ? importedData.workbook
+        : importedData;
+
+    if (Array.isArray(rawData)) {
+        if (rawData.length > 0 && (!rawData[0].hasOwnProperty('job_title') || !rawData[0].hasOwnProperty('id'))) {
+            throw new Error("此檔案不是合法的 OSRA 評估數據格式。");
         }
+
+        workbook = {
+            activeSheetId: 'sheet_imported',
+            sheets: [
+                {
+                    id: 'sheet_imported',
+                    name: '載入資料',
+                    meta: createEmptySheetMeta(),
+                    data: rawData,
+                    rowCounter: rawData.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0),
+                    auditWarningCount: 0,
+                    auditHtml: ''
+                }
+            ]
+        };
+
+        return;
+    }
+
+    if (rawData && rawData.sheets && rawData.activeSheetId) {
+        workbook = rawData;
+
+        workbook.sheets.forEach(sheet => {
+            normalizeSheet(sheet);
+        });
+
+        return;
+    }
+
+    throw new Error("此檔案不是合法的 OSRA 評估資料格式。");
+}
 
         async function handleJsonFileLoad(event) {
     if (canImportData()) {
@@ -4144,41 +4220,23 @@ async function loadPreviewJson(event) {
         try {
             const importedData = JSON.parse(e.target.result);
 
-            if (Array.isArray(importedData)) {
-                workbook = {
-                    activeSheetId: 'sheet_preview',
-                    sheets: [
-                        {
-                            id: 'sheet_preview',
-                            name: '載入預覽',
-                            meta: createEmptySheetMeta(),
-                            data: importedData,
-                            rowCounter: importedData.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0),
-                            auditWarningCount: 0,
-                            auditHtml: ''
-                        }
-                    ]
-                };
-            } else if (importedData.sheets && importedData.activeSheetId) {
-                workbook = importedData;
+            applyImportedRiskAssessmentData(importedData);
 
-                workbook.sheets.forEach(sheet => {
-                    normalizeSheet(sheet);
-                });
-            } else {
-                throw new Error("此檔案不是合法的 OSRA 評估資料格式。");
-            }
-
-            await setDBValue('workbook', workbook);
+            /*
+             * 預覽載入不處理：
+             * admin_password
+             * editor_password
+             * editor_enabled
+             * apiKey
+             *
+             * 預覽模式只更新目前頁面，不寫入 IndexedDB。
+             */
+            isPreviewDataMode = true;
 
             switchTab(workbook.activeSheetId, true);
             updateAdminModeUI();
 
-            if (isEditorAuthenticated) {
-                showToast("資料已載入，可進行編輯與儲存。", "success");
-            } else {
-                showToast("資料已載入預覽。檢視者模式下不會開放編輯、匯出或匯入資料。", "success");
-            }
+            showToast("資料已載入預覽。此資料僅供本次頁面檢視，不會保存到瀏覽器。", "success");
 
         } catch (err) {
             console.error(err);
@@ -4191,63 +4249,53 @@ async function loadPreviewJson(event) {
     reader.readAsText(file);
 }
 
-        async function importFromJson(event) {
-            if (!canImportData()) {
-    showToast("只有管理者可以匯入完整備份。", "error");
-    event.target.value = '';
-    openAdminModal();
-    return;
+async function importFromJson(event) {
+    if (!canImportData()) {
+        showToast("請先登入使用者或管理者權限後再載入資料。", "error");
+        event.target.value = '';
+        openAdminModal();
+        return;
+    }
+
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = async function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+
+            applyImportedRiskAssessmentData(importedData);
+
+            /*
+             * 正式載入 / 匯入不處理：
+             * admin_password
+             * editor_password
+             * editor_enabled
+             * apiKey
+             *
+             * 密碼、權限與 API 設定維持目前瀏覽器原本設定。
+             */
+            isPreviewDataMode = false;
+
+            await setDBValue('workbook', workbook);
+
+            switchTab(workbook.activeSheetId, true);
+            updateAdminModeUI();
+
+            showToast("JSON 資料載入成功！", "success");
+
+        } catch (err) {
+            console.error("載入資料失敗：", err);
+            showToast(`載入失敗：${err.message}`, "error");
+        } finally {
+            event.target.value = '';
+        }
+    };
+
+    reader.readAsText(file);
 }
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    
-                    if (Array.isArray(importedData)) {
-                        // 舊版備份 (僅陣列) 向下相容遷移
-                        if (importedData.length > 0 && (!importedData[0].hasOwnProperty('job_title') || !importedData[0].hasOwnProperty('id'))) {
-                            throw new Error("此檔案不是合法的 OSRA 評估數據格式。");
-                        }
-workbook = {
-    activeSheetId: 'sheet_imported',
-    sheets: [
-        {
-            id: 'sheet_imported',
-            name: '導入備份資料',
-            meta: createEmptySheetMeta(),
-            data: importedData,
-            rowCounter: Math.max(...importedData.map(d => d.id), 0)
-        }
-    ]
-};
-} else if (importedData.sheets && importedData.activeSheetId) {
-    // 新版 Workbook 格式
-    workbook = importedData;
-
-    workbook.sheets.forEach(sheet => {
-        normalizeSheet(sheet);
-    });
-} else {
-                        throw new Error("導入的檔案格式不正確。");
-                    }
-                    
-                    await setDBValue('workbook', workbook);
-                    
-                    switchTab(workbook.activeSheetId, true);
-                    
-                    showToast(`已成功導入 ${workbook.sheets.length} 個分頁的數據！`, "success");
-                } catch (err) {
-                    console.error("導入數據失敗：", err);
-                    showToast(`導入失敗：${err.message}`, "error");
-                } finally {
-                    event.target.value = '';
-                }
-            };
-            reader.readAsText(file);
-        }
 
         // ----------------------------------------------------
         // P. 附件管理與上傳邏輯處理
