@@ -1019,7 +1019,7 @@ table.osra-table textarea::placeholder {
         onclick="exportToJson()"
         class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-md">
     <i class="fa-solid fa-file-export"></i>
-    <span id="export-json-label">匯出備份</span>
+    <span id="export-json-label">匯出資料</span>
 </button>
 
 <input type="file" id="dbImportInput" accept=".json" class="hidden" onchange="handleJsonFileLoad(event)">
@@ -1532,7 +1532,7 @@ table.osra-table textarea::placeholder {
                 </label>
 
                 <p class="text-[11px] text-slate-400 leading-snug">
-                    使用者權限可編輯、上傳附件、儲存與匯出備份；刪除、匯入及權限設定仍限管理者。
+                    使用者權限可編輯、上傳附件、儲存與匯出資料；刪除、匯入及權限設定仍限管理者。
                 </p>
 
                 <div class="flex space-x-2 pt-1">
@@ -1752,7 +1752,7 @@ const DB_VERSION = 1;
 const STORE_NAME = 'osra_store';
 
 const DEFAULT_ADMIN_PASSWORD = "SamCore@1068";
-const DEFAULT_EDITOR_PASSWORD = "TeamEdit116";
+const DEFAULT_EDITOR_PASSWORD = "TeamUser001";
 const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
 
         function openDB() {
@@ -3838,9 +3838,9 @@ function updateJsonActionButtons() {
 
     if (exportLabel) {
         if (isAdminAuthenticated) {
-            exportLabel.innerText = '匯出備份';
+            exportLabel.innerText = '匯出資料';
         } else if (isEditorAuthenticated) {
-            exportLabel.innerText = '匯出備份';
+            exportLabel.innerText = '匯出資料';
         } else {
             exportLabel.innerText = '匯出資料';
         }
@@ -3848,7 +3848,7 @@ function updateJsonActionButtons() {
 
     if (loadLabel) {
         if (isAdminAuthenticated) {
-            loadLabel.innerText = '匯入備份';
+            loadLabel.innerText = '匯入資料';
         } else if (isEditorAuthenticated) {
             loadLabel.innerText = '載入資料';
         } else {
@@ -4177,7 +4177,7 @@ async function loadPreviewJson(event) {
             if (isEditorAuthenticated) {
                 showToast("資料已載入，可進行編輯與儲存。", "success");
             } else {
-                showToast("資料已載入預覽。檢視者模式下不會開放編輯、匯出或匯入備份。", "success");
+                showToast("資料已載入預覽。檢視者模式下不會開放編輯、匯出或匯入資料。", "success");
             }
 
         } catch (err) {
