@@ -401,6 +401,12 @@ body:not(.edit-mode) table.osra-table textarea:focus {
     transform: translateY(-1px);
 }
 
+.file-preview-toolbar,
+.file-preview-tool-btn,
+.file-preview-close {
+    touch-action: manipulation;
+}
+
 .file-preview-zoom-pill {
     min-width: 70px;
     background: rgba(37, 99, 235, 0.28);
@@ -461,7 +467,7 @@ body:not(.edit-mode) table.osra-table textarea:focus {
     background-position: 0 0, 0 13px, 13px -13px, -13px 0;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    touch-action: pan-x pan-y;
+    touch-action: manipulation;
 }
 
 #file-preview-stage {
@@ -1704,7 +1710,7 @@ table.osra-table textarea::placeholder {
         </div>
 
 <div class="file-preview-hint">
-    可使用滑鼠滾輪、觸控滑動、放大縮小或旋轉功能檢視附件內容
+    可使用 Ctrl + 滑鼠滾輪、工具列按鈕縮放，並可使用旋轉功能調整方向
 </div>
     </div>
 </div>
@@ -4682,7 +4688,7 @@ function getImageFitPreviewScale(image) {
     const availableHeight = Math.max(260, (body?.clientHeight || window.innerHeight) - 36);
     const fitScale = Math.min(availableWidth / naturalWidth, availableHeight / naturalHeight, 1);
 
-    return clampPreviewScale(fitScale, 0.15, 1.2);
+    return clampPreviewScale(fitScale, 0.15, 1);
 }
 
 function applyPreviewImageScale() {
@@ -4841,12 +4847,6 @@ function ensureFilePreviewGestures() {
         event.preventDefault();
         zoomFilePreviewBy(event.deltaY < 0 ? 0.12 : -0.12);
     }, { passive: false });
-
-    body.addEventListener('dblclick', function() {
-        const baseScale = filePreviewDefaultScale || 1;
-        const isAlreadyZoomed = filePreviewScale > baseScale * 1.45;
-        setFilePreviewScale(isAlreadyZoomed ? baseScale : baseScale * 2);
-    });
 
     body.addEventListener('touchstart', function(event) {
         if (event.touches.length !== 2) return;
@@ -5078,16 +5078,24 @@ function openImagePreview(file) {
     setFilePreviewLoading(true, '圖片載入中...', 1000);
     image.classList.remove('hidden');
 
-    image.onload = () => {
-        const baseImageScale = getImageFitPreviewScale(image);
-        const isDesktopPreview = window.matchMedia('(min-width: 901px)').matches;
+image.onload = () => {
+    const baseImageScale = getImageFitPreviewScale(image);
+    const isDesktopPreview = window.matchMedia('(min-width: 901px)').matches;
 
-        filePreviewDefaultScale = baseImageScale;
-        filePreviewScale = isDesktopPreview ? baseImageScale * 1.6 : baseImageScale;
+    /*
+     * 附件圖片預覽初始比例：
+     * 1. 手機版：維持適合畫面，避免超出與誤觸。
+     * 2. 桌機版：保留略放大，避免圖片太小。
+     * 3. 最高限制 125%，避免開啟後跳到 160% 以上。
+     */
+    filePreviewDefaultScale = baseImageScale;
+    filePreviewScale = isDesktopPreview
+        ? Math.min(baseImageScale * 1.25, 1.25)
+        : baseImageScale;
 
-        applyPreviewImageScale();
-        setFilePreviewLoading(false);
-    };
+    applyPreviewImageScale();
+    setFilePreviewLoading(false);
+};
 
     image.onerror = () => {
         setFilePreviewLoading(false);
