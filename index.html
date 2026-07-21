@@ -213,11 +213,17 @@ body.edit-mode .admin-create-sheet-block {
     display: inline-flex !important;
 }
 
-body.admin-mode .admin-delete-block {
+/*
+ * 管理者也必須先進入矩陣編輯模式，
+ * 才顯示刪除與管理欄。
+ */
+body.admin-mode.edit-mode
+.admin-delete-block {
     display: inline-flex !important;
 }
 
-body.admin-mode .admin-delete-cell {
+body.admin-mode.edit-mode
+.admin-delete-cell {
     display: table-cell !important;
 }
 
@@ -728,33 +734,45 @@ nav p {
        3. 手機版：四大圖卡改為 2 欄 × 2 列
        ========================= */
 
-    #dashboard-stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.75rem;
-    }
+#dashboard-stats {
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
 
-    #dashboard-stats > div {
-        min-width: 0;
-        padding: 0.75rem;
-        align-items: flex-start;
-        gap: 0.6rem;
-    }
+    gap: 0.55rem;
+}
 
-    #dashboard-stats > div > div:first-child {
-        flex: 0 0 auto;
-        padding: 0.55rem;
-    }
+#dashboard-stats > div {
+    min-width: 0;
+    min-height: 54px;
 
-    #dashboard-stats p {
-        font-size: 0.65rem;
-        line-height: 1.25;
-        word-break: keep-all;
-    }
+    padding: 0.5rem 0.6rem;
 
-    #dashboard-stats h3 {
-        font-size: 1.15rem;
-        line-height: 1.25;
-    }
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#dashboard-stats > div > div:first-child {
+    flex: 0 0 auto;
+    padding: 0.4rem;
+}
+
+#dashboard-stats > div > div:first-child i {
+    font-size: 0.95rem !important;
+}
+
+#dashboard-stats p {
+    font-size: 0.58rem;
+    line-height: 1.15;
+
+    word-break: keep-all;
+}
+
+#dashboard-stats h3 {
+    margin-top: 1px;
+
+    font-size: 1rem;
+    line-height: 1.1;
+}
 
 
     /* =========================
@@ -791,6 +809,456 @@ nav p {
         padding-left: 1rem !important;
         padding-right: 1rem !important;
         gap: 1rem !important;
+    }
+}
+
+/* =========================================================
+   桌機版：四張統計圖卡高度精簡
+========================================================= */
+@media screen and (min-width: 768px) {
+
+    #dashboard-stats {
+        gap: 0.75rem !important;
+    }
+
+    #dashboard-stats > div {
+        min-height: 58px;
+
+        padding: 0.5rem 0.75rem !important;
+        gap: 0.65rem !important;
+
+        align-items: center !important;
+    }
+
+    #dashboard-stats > div > div:first-child {
+        padding: 0.45rem !important;
+    }
+
+    #dashboard-stats > div > div:first-child i {
+        font-size: 1rem !important;
+    }
+
+    #dashboard-stats p {
+        font-size: 0.6rem !important;
+        line-height: 1.15 !important;
+    }
+
+    #dashboard-stats h3 {
+        margin-top: 1px;
+
+        font-size: 1.05rem !important;
+        line-height: 1.1 !important;
+    }
+}
+
+/* =========================================================
+   矩陣表標題列與四顆功能按鈕
+========================================================= */
+#matrix-panel-header {
+    min-height: 48px;
+    padding: 6px 10px 6px 14px;
+}
+
+#matrix-panel-title {
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+#matrix-action-buttons {
+    gap: 6px;
+}
+
+.matrix-bulk-icon-btn,
+.matrix-add-icon-btn,
+.edit-toggle-icon-btn,
+.save-data-icon-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    flex: 0 0 36px;
+
+    padding: 0;
+    border-radius: 10px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 13px;
+
+    transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease;
+
+    box-shadow:
+        0 3px 8px
+        rgba(15, 23, 42, 0.16);
+}
+
+/* 批次智慧生成 */
+.matrix-bulk-icon-btn {
+    background: #7c3aed;
+    border: 1px solid #7c3aed;
+    color: #ffffff;
+}
+
+.matrix-bulk-icon-btn:hover {
+    background: #6d28d9;
+    border-color: #6d28d9;
+}
+
+/* 新增項次 */
+.matrix-add-icon-btn {
+    background: #4f46e5;
+    border: 1px solid #4f46e5;
+    color: #ffffff;
+}
+
+.matrix-add-icon-btn:hover {
+    background: #4338ca;
+    border-color: #4338ca;
+}
+
+/* 尚未進入編輯模式 */
+.edit-toggle-icon-btn.is-view {
+    background: #ffffff;
+    border: 1px solid #bfdbfe;
+    color: #2563eb;
+}
+
+.edit-toggle-icon-btn.is-view:hover {
+    background: #eff6ff;
+    border-color: #93c5fd;
+}
+
+/* 已進入編輯模式 */
+.edit-toggle-icon-btn.is-editing {
+    background: #fffbeb;
+    border: 1px solid #fbbf24;
+    color: #b45309;
+}
+
+.edit-toggle-icon-btn.is-editing:hover {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
+/* 儲存 */
+.save-data-icon-btn {
+    background: #059669;
+    border: 1px solid #059669;
+    color: #ffffff;
+}
+
+.save-data-icon-btn:hover {
+    background: #047857;
+    border-color: #047857;
+}
+
+.matrix-bulk-icon-btn:active,
+.matrix-add-icon-btn:active,
+.edit-toggle-icon-btn:active,
+.save-data-icon-btn:active {
+    transform: scale(0.95);
+}
+
+/* =========================================================
+   手機及觸控平板：
+   防止 Safari 聚焦輸入框自動放大
+========================================================= */
+@media screen and (max-width: 950px),
+       (hover: none) and (pointer: coarse) {
+
+    input[type="text"],
+    input[type="password"],
+    input[type="date"],
+    input[type="number"],
+    input[type="search"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="url"],
+    input:not([type]),
+    textarea,
+    select {
+        font-size: 16px !important;
+
+        -webkit-text-size-adjust:
+            100% !important;
+
+        text-size-adjust:
+            100% !important;
+    }
+
+    textarea {
+        line-height: 1.4 !important;
+    }
+
+    /*
+     * 矩陣數字輸入框維持固定寬度，
+     * 避免改為 16px 後欄位被撐開。
+     */
+    #osraTable
+    input[type="number"] {
+        width: 40px !important;
+        min-width: 40px !important;
+
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+    }
+}
+
+/* =========================================================
+   下方風險基準與 AI 稽核面板
+========================================================= */
+#bottom-panels {
+    align-items: stretch;
+}
+
+#risk-level-panel,
+#ai-audit-panel {
+    min-width: 0;
+}
+
+#risk-level-title {
+    margin: 0;
+    line-height: 1.2;
+}
+
+/*
+ * 第一個子項為 4×4 矩陣，占滿整排。
+ * 後面三個說明區塊為單排三欄。
+ */
+#risk-level-content {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 10px;
+}
+
+#risk-level-content > div {
+    min-width: 0;
+}
+
+#risk-level-content > div:first-child {
+    grid-column: 1 / -1;
+}
+
+#risk-level-content >
+div:not(:first-child) {
+    display: flex;
+    flex-direction: column;
+}
+
+#risk-level-content >
+div:not(:first-child) > span {
+    margin-bottom: 5px !important;
+
+    font-size: 10.5px !important;
+    line-height: 1.25 !important;
+
+    white-space: normal;
+}
+
+#risk-level-content >
+div:not(:first-child) > div {
+    flex: 1;
+
+    padding: 8px 9px !important;
+
+    font-size: 9.5px !important;
+    line-height: 1.42 !important;
+
+    border-radius: 8px !important;
+}
+
+#risk-level-content >
+div:not(:first-child) > div > div + div {
+    margin-top: 5px;
+}
+
+#risk-level-content >
+div:not(:first-child) > div > div + div {
+    margin-top: 4px;
+}
+
+/* AI 稽核區精簡 */
+#ai-audit-header {
+    min-height: 48px;
+    padding: 7px 12px;
+
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+#aiAuditBtn {
+    min-height: 34px;
+
+    padding: 6px 11px !important;
+
+    border-radius: 9px !important;
+
+    font-size: 12px !important;
+    line-height: 1.1 !important;
+}
+
+#aiAuditBtn > span:first-child {
+    top: -6px !important;
+    right: -6px !important;
+
+    padding: 1px 4px !important;
+
+    font-size: 9px !important;
+}
+
+#ai-audit-standard {
+    min-height: 36px;
+
+    padding: 8px 12px;
+
+    font-size: 11px;
+    line-height: 1.25;
+}
+
+#audit-results {
+    max-height: 340px;
+
+    padding: 12px;
+}
+
+#audit-results > .text-center {
+    padding-top: 22px !important;
+    padding-bottom: 22px !important;
+}
+
+#audit-results > .text-center > i {
+    margin-bottom: 6px !important;
+
+    font-size: 30px !important;
+}
+
+/* =========================================================
+   桌機：左側風險基準、右側 AI 稽核
+========================================================= */
+@media screen and (min-width: 1024px) {
+    #bottom-panels {
+        grid-template-columns:
+            minmax(0, 1.18fr)
+            minmax(340px, 0.82fr) !important;
+
+        gap: 14px !important;
+    }
+}
+
+/* =========================================================
+   手機與平板橫式：
+   比照桌機左右排列，但稍微壓縮比例
+========================================================= */
+@media screen
+and (orientation: landscape)
+and (min-width: 640px)
+and (max-width: 1023px) {
+
+    #bottom-panels {
+        display: grid !important;
+
+        grid-template-columns:
+            minmax(0, 1.18fr)
+            minmax(240px, 0.82fr) !important;
+
+        gap: 10px !important;
+    }
+
+    #bottom-panels > div:nth-child(1),
+    #bottom-panels > div:nth-child(2) {
+        order: initial !important;
+    }
+
+    #risk-level-panel {
+        padding: 10px !important;
+        gap: 8px !important;
+    }
+
+    #risk-level-content {
+        gap: 6px !important;
+    }
+
+    #risk-level-content >
+    div:not(:first-child) > span {
+        margin-bottom: 3px !important;
+
+        font-size: 9px !important;
+        line-height: 1.15 !important;
+    }
+
+    #risk-level-content >
+    div:not(:first-child) > div {
+        padding: 6px !important;
+
+        font-size: 8px !important;
+        line-height: 1.28 !important;
+    }
+
+    #ai-audit-header {
+        min-height: 42px;
+
+        padding: 5px 8px;
+
+        font-size: 11px;
+    }
+
+    #aiAuditBtn {
+        min-height: 30px;
+
+        padding: 4px 8px !important;
+
+        font-size: 10px !important;
+    }
+
+    #ai-audit-standard {
+        min-height: 32px;
+
+        padding: 6px 8px;
+
+        font-size: 9px;
+    }
+
+    #audit-results {
+        max-height: 270px;
+
+        padding: 8px;
+    }
+}
+
+/* =========================================================
+   手機直式：
+   維持上下排列，避免三欄文字過度擁擠
+========================================================= */
+@media screen
+and (orientation: portrait)
+and (max-width: 767px) {
+
+    #risk-level-content {
+        grid-template-columns:
+            minmax(0, 1fr) !important;
+    }
+
+    #risk-level-content > div:first-child {
+        grid-column: auto !important;
+    }
+
+    #risk-level-content >
+    div:not(:first-child) > span {
+        font-size: 10px !important;
+    }
+
+    #risk-level-content >
+    div:not(:first-child) > div {
+        font-size: 9.5px !important;
+        line-height: 1.35 !important;
     }
 }
 
@@ -1018,9 +1486,7 @@ table.osra-table textarea::placeholder {
                 <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-sm">
                     <i class="fa-solid fa-print"></i> 列印 / PDF
                 </button>
-<button onclick="openBulkImportModal()" class="admin-delete-block bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition items-center gap-1.5 shadow-md shadow-indigo-900/10">
-    <i class="fa-solid fa-file-import"></i> 批次智慧生成
-</button>
+
 <button id="export-json-btn"
         onclick="exportToJson()"
         class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-md">
@@ -1031,7 +1497,7 @@ table.osra-table textarea::placeholder {
 <input type="file" id="dbImportInput" accept=".json" class="hidden" onchange="handleJsonFileLoad(event)">
 
 <button id="load-json-btn"
-        onclick="document.getElementById('dbImportInput').click()"
+        onclick="handleLoadJsonAction()"
         class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-md">
     <i class="fa-solid fa-download"></i>
     <span id="load-json-label">載入預覽</span>
@@ -1102,19 +1568,74 @@ table.osra-table textarea::placeholder {
             <!-- 主風險評估表 (OSRA Grid) -->
             <div id="print-section" class="w-full flex flex-col gap-4">
                 <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col">
-                    <div class="p-4 bg-slate-800 text-white flex justify-between items-center">
-                        <span class="font-semibold text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-table-list text-indigo-400"></i> ISO 45001 危害鑑別與風險評估矩陣表
-                        </span>
-                        <!-- 新增管理員模式專用控制按鈕區 -->
-                        <div class="flex gap-2">
-                            <button id="add-row-btn" onclick="addNewRow()" class="admin-edit-block bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs font-semibold transition-colors flex items-center gap-1 shadow">
-                                <i class="fa-solid fa-plus"></i> 新增評估項次
-                            </button>
-                            <button id="save-records-btn" onclick="manualSaveRecords()" class="admin-edit-block bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs font-semibold transition-colors flex items-center gap-1 shadow">
-                                <i class="fa-solid fa-floppy-disk"></i> 儲存記錄
-                            </button>
-                        </div>
+<div
+    id="matrix-panel-header"
+    class="bg-slate-800 text-white flex justify-between items-center gap-3"
+>
+    <span
+        id="matrix-panel-title"
+        class="font-semibold flex items-center gap-2 min-w-0"
+    >
+        <i class="fa-solid fa-table-list text-indigo-400 shrink-0"></i>
+
+        <span>
+            ISO 45001 危害鑑別與風險評估矩陣表
+        </span>
+    </span>
+
+    <div
+        id="matrix-action-buttons"
+        class="flex items-center shrink-0"
+    >
+        <!-- 1. 批次智慧生成：僅管理者編輯模式顯示 -->
+        <button
+            id="bulk-generate-btn"
+            type="button"
+            onclick="openBulkImportModal()"
+            class="admin-delete-block matrix-bulk-icon-btn"
+            title="批次智慧生成"
+            aria-label="批次智慧生成"
+        >
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </button>
+
+        <!-- 2. 新增評估項次 -->
+        <button
+            id="add-row-btn"
+            type="button"
+            onclick="addNewRow()"
+            class="admin-edit-block matrix-add-icon-btn"
+            title="新增評估項次"
+            aria-label="新增評估項次"
+        >
+            <i class="fa-solid fa-plus"></i>
+        </button>
+
+        <!-- 3. 編輯／檢視 -->
+        <button
+            id="risk-edit-toggle-btn"
+            type="button"
+            onclick="toggleRiskEditMode()"
+            class="hidden edit-toggle-icon-btn is-view"
+            title="進入風險評估矩陣編輯模式"
+            aria-label="進入風險評估矩陣編輯模式"
+        >
+            <i class="fa-solid fa-pen-to-square"></i>
+        </button>
+
+        <!-- 4. 儲存記錄 -->
+        <button
+            id="save-records-btn"
+            type="button"
+            onclick="manualSaveRecords()"
+            class="hidden save-data-icon-btn"
+            title="儲存評估記錄"
+            aria-label="儲存評估記錄"
+        >
+            <i class="fa-solid fa-floppy-disk"></i>
+        </button>
+    </div>
+</div>
                     </div>
 
                     <!-- 分頁標籤容器 (Admin mode controlled) -->
@@ -1252,15 +1773,27 @@ table.osra-table textarea::placeholder {
             </div>
 
             <!-- 下方：AI 智慧助手與即時稽核面板 (並排佈局) -->
-            <div id="bottom-panels" class="w-full grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div
+    id="bottom-panels"
+    class="w-full grid grid-cols-1 gap-4"
+>
                 
                 <!-- 風險等級之分級基準表 -->
-                <div class="bg-white rounded-xl shadow-md border border-slate-200 p-5 flex flex-col gap-4 h-full">
-                    <h3 class="font-bold text-sm text-slate-800 border-b pb-2 flex items-center gap-2">
+                <div
+    id="risk-level-panel"
+    class="bg-white rounded-xl shadow-md border border-slate-200 p-4 flex flex-col gap-3 h-full"
+>
+                    <h3
+    id="risk-level-title"
+    class="font-bold text-[13px] text-slate-800 border-b pb-2 flex items-center gap-2"
+>
                         <i class="fa-solid fa-table text-indigo-600"></i> 
                         風險等級之分級基準表
                     </h3>
-                    <div class="text-xs space-y-4">
+                    <div
+    id="risk-level-content"
+    class="text-xs"
+>
                         
                         <!-- 4x4 判定矩陣 -->
                         <div>
@@ -1329,7 +1862,7 @@ table.osra-table textarea::placeholder {
                         <!-- 風險控制規劃規劃基準 -->
                         <div class="space-y-1">
                             <span class="font-bold text-slate-700 block flex items-center gap-1">
-                                <i class="fa-solid fa-shield-halved text-emerald-600"></i> 風險控制規劃規劃基準
+                                <i class="fa-solid fa-shield-halved text-emerald-600"></i> 風險控制規劃基準
                             </span>
                             <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100 space-y-1.5 text-[10.5px] leading-relaxed">
                                 <div><strong class="text-red-600">5 重大風險：</strong>須立即降低風險，降低前不應開始或繼續作業。</div>
@@ -1343,23 +1876,29 @@ table.osra-table textarea::placeholder {
                 </div>
 
                 <!-- AI 品質審查報告 (Quality Audit Report) -->
-                <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col h-full">
-                    <div class="p-4 bg-amber-500 text-slate-950 font-bold flex justify-between items-center">
+                <div
+    id="ai-audit-panel"
+    class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col h-full"
+>
+                    <div
+    id="ai-audit-header"
+    class="bg-amber-500 text-slate-950 font-bold flex justify-between items-center gap-3"
+>
                         <span class="flex items-center gap-2">
                             <i class="fa-solid fa-clipboard-check text-slate-900"></i> AI 風險評估稽核報告
                         </span>
 <button
     id="aiAuditBtn"
     onclick="runAiAudit()"
-    class="group relative overflow-visible
-           bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500
-           hover:from-indigo-500 hover:via-blue-500 hover:to-cyan-400
-           text-white text-sm font-semibold
-           px-4 py-2 rounded-xl
-           shadow-lg shadow-blue-500/20
-           hover:shadow-cyan-400/40
-           transition-all duration-300
-           flex items-center gap-2"
+class="group relative overflow-visible
+       bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500
+       hover:from-indigo-500 hover:via-blue-500 hover:to-cyan-400
+       text-white text-xs font-semibold
+       px-3 py-1.5 rounded-lg
+       shadow-md shadow-blue-500/20
+       hover:shadow-cyan-400/40
+       transition-all duration-300
+       flex items-center gap-1.5"
 >
     <!-- 右上角 AI 小標籤 -->
     <span class="absolute -top-2 -right-2
@@ -1380,12 +1919,18 @@ table.osra-table textarea::placeholder {
 </button>
                     </div>
                     
-                    <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center text-xs">
+                    <div
+    id="ai-audit-standard"
+    class="bg-slate-50 border-b border-slate-200 flex justify-between items-center text-xs gap-3"
+>
                         <span class="text-slate-500">法規參考標準：</span>
                         <span class="font-bold text-slate-700">ISO 45001 & 職業安全衛生法規則</span>
                     </div>
 
-                    <div id="audit-results" class="p-4 max-h-[400px] overflow-y-auto space-y-3">
+                    <div
+    id="audit-results"
+    class="overflow-y-auto space-y-3"
+>
                         <!-- 預設無稽核狀態 -->
                         <div class="text-center py-8 text-slate-400">
                             <i class="fa-solid fa-shield-virus text-4xl mb-2 text-slate-300"></i>
@@ -2006,6 +2551,10 @@ function saveSheetMetaToActiveSheet() {
 }
 
 function updateSheetMetaState() {
+    if (!canEditRiskMatrixNow()) {
+        return;
+    }
+
     saveSheetMetaToActiveSheet();
     syncWorkbook();
 }
@@ -2013,20 +2562,36 @@ function updateSheetMetaState() {
         // ----------------------------------------------------
         // B. 狀態管理 (State Management)
         // ----------------------------------------------------
-let workbook = {
-    activeSheetId: 'sheet_default',
-    sheets: [
-        {
-            id: 'sheet_default',
-            name: '預設評估表',
-            meta: createEmptySheetMeta(),
-            data: [],
-            rowCounter: 0,
-            auditWarningCount: 0,
-            auditHtml: ''
-        }
-    ]
-};
+function createBlankRiskWorkbook() {
+    return {
+        activeSheetId:
+            'sheet_default',
+
+        sheets: [
+            {
+                id:
+                    'sheet_default',
+
+                name:
+                    '預設評估表',
+
+                meta:
+                    createEmptySheetMeta(),
+
+                data: [],
+
+                rowCounter: 0,
+
+                auditWarningCount: 0,
+
+                auditHtml: ''
+            }
+        ]
+    };
+}
+
+let workbook =
+    createBlankRiskWorkbook();
 let osraData = [];
 let rowCounter = 0;
 let isRenderingSheet = false;
@@ -2042,6 +2607,14 @@ let isEditorAuthenticated = false;
 /* 預覽載入模式：只暫存在目前頁面，不寫入 IndexedDB */
 let isPreviewDataMode = false;
 
+/*
+ * 危害鑑別與風險評估矩陣編輯狀態。
+ *
+ * 管理者或使用者登入後，
+ * 預設仍為檢視模式。
+ */
+let isRiskEditMode = false;
+
 let systemPassword = DEFAULT_ADMIN_PASSWORD;
 let editorPassword = DEFAULT_EDITOR_PASSWORD;
 let editorEnabled = true;
@@ -2056,8 +2629,26 @@ function canEditData() {
     return isAdminAuthenticated || isEditorAuthenticated;
 }
 
+/*
+ * 真正可編輯矩陣的條件：
+ *
+ * 1. 已登入管理者或使用者。
+ * 2. 已主動點擊編輯按鈕。
+ * 3. 不是預覽資料模式。
+ */
+function canEditRiskMatrixNow() {
+    return (
+        canEditData() &&
+        isRiskEditMode &&
+        !isPreviewDataMode
+    );
+}
+
 function canDeleteData() {
-    return isAdminAuthenticated;
+    return (
+        isAdminAuthenticated &&
+        canEditRiskMatrixNow()
+    );
 }
 
 function canChangePassword() {
@@ -2077,19 +2668,25 @@ function canExportBackupData() {
 }
 
 function canCreateSheets() {
-    return isAdminAuthenticated || isEditorAuthenticated;
+    return canEditRiskMatrixNow();
 }
 
 function canRenameSheets() {
-    return isAdminAuthenticated || isEditorAuthenticated;
+    return canEditRiskMatrixNow();
 }
 
 function canManageSheets() {
-    return isAdminAuthenticated;
+    return (
+        isAdminAuthenticated &&
+        canEditRiskMatrixNow()
+    );
 }
 
 function canUseBulkGenerate() {
-    return isAdminAuthenticated;
+    return (
+        isAdminAuthenticated &&
+        canEditRiskMatrixNow()
+    );
 }
         
 function syncWorkbook() {
@@ -2197,39 +2794,22 @@ systemPassword = savedAdminPassword;
 editorPassword = savedEditorPassword;
 editorEnabled = Boolean(savedEditorEnabled);
 
-                // 2. 讀取與重建表單數據 (支援新版 Workbook 分頁架構與舊版遷移)
-                const savedWorkbook = await getDBValue('workbook');
-                const savedCounter = await getDBValue('row_counter');
-                const savedData = await getDBValue('assessment_rows');
+/*
+ * 預覽者開啟系統時，
+ * 不直接呈現 IndexedDB 正式資料。
+ *
+ * 正式資料改由管理者或使用者
+ * 登入成功後才讀取。
+ */
+clearViewerWorkspace();
+} catch (err) {
+    console.error(
+        'IndexedDB 初始化失敗：',
+        err
+    );
 
-if (savedWorkbook) {
-    workbook = savedWorkbook;
-
-    workbook.sheets.forEach(sheet => {
-        normalizeSheet(sheet);
-    });
-} else if (savedData && savedData.length > 0) {
-                    // 舊版資料遷移至新分頁架構
-workbook.sheets[0].meta = createEmptySheetMeta();
-workbook.sheets[0].data = savedData;
-workbook.sheets[0].rowCounter = savedCounter || 0;
-await setDBValue('workbook', workbook);
-                }
-
-                // 執行分頁切換與載入
-                switchTab(workbook.activeSheetId, true);
-
-                if (osraData.length > 0) {
-                    showToast("已成功從 IndexedDB 資料庫還原歷史數據！", "success");
-} else {
-    // 空資料庫時不自動建立空白列
-    updateDashboardStats();
+    clearViewerWorkspace();
 }
-            } catch (err) {
-                console.error("IndexedDB 初始化失敗，回退至內建常態機制：", err);
-                switchTab('sheet_default', true);
-                addNewRow();
-            }
             
             // 重新判定頂端 Banner 狀態 (若有 Banner 元件存在才執行修改)
             const banner = document.getElementById('api-status-banner');
@@ -2255,6 +2835,139 @@ window.addEventListener('keydown', function(event) {
         closeFilePreviewModal();
     }
 });
+
+/* =========================================================
+   預覽者空白工作區
+========================================================= */
+function clearViewerWorkspace() {
+    /*
+     * 只清除目前畫面，
+     * 不刪除 IndexedDB 正式資料。
+     */
+    isPreviewDataMode = false;
+    isRiskEditMode = false;
+
+    workbook =
+        createBlankRiskWorkbook();
+
+    osraData = [];
+    rowCounter = 0;
+
+    window._tempAttachments = {};
+
+    const fileInput =
+        document.getElementById(
+            'dbImportInput'
+        );
+
+    if (fileInput) {
+        fileInput.value = '';
+    }
+
+    closeAttachmentModal();
+    closeFilePreviewModal();
+
+    /*
+     * initialLoad=true：
+     * 空白工作區不自動新增空白列，
+     * 也不寫入 IndexedDB。
+     */
+    switchTab(
+        workbook.activeSheetId,
+        true
+    );
+
+    updateAdminModeUI();
+    updateDashboardStats();
+}
+
+/* =========================================================
+   登入後讀取正式 IndexedDB 資料
+========================================================= */
+async function loadFormalWorkbookIntoWorkspace() {
+    const savedWorkbook =
+        await getDBValue(
+            'workbook'
+        );
+
+    const savedCounter =
+        await getDBValue(
+            'row_counter'
+        );
+
+    const savedData =
+        await getDBValue(
+            'assessment_rows'
+        );
+
+    if (
+        savedWorkbook &&
+        Array.isArray(
+            savedWorkbook.sheets
+        ) &&
+        savedWorkbook.sheets.length > 0
+    ) {
+        workbook =
+            JSON.parse(
+                JSON.stringify(
+                    savedWorkbook
+                )
+            );
+
+    } else {
+        workbook =
+            createBlankRiskWorkbook();
+
+        /*
+         * 保留舊版資料遷移功能。
+         */
+        if (
+            Array.isArray(savedData) &&
+            savedData.length > 0
+        ) {
+            workbook.sheets[0].data =
+                savedData;
+
+            workbook.sheets[0]
+                .rowCounter =
+                savedCounter || 0;
+
+            await setDBValue(
+                'workbook',
+                workbook
+            );
+        }
+    }
+
+    workbook.sheets.forEach(
+        sheet => normalizeSheet(sheet)
+    );
+
+    const hasActiveSheet =
+        workbook.sheets.some(
+            sheet =>
+                sheet.id ===
+                workbook.activeSheetId
+        );
+
+    if (!hasActiveSheet) {
+        workbook.activeSheetId =
+            workbook.sheets[0].id;
+    }
+
+    isPreviewDataMode = false;
+    isRiskEditMode = false;
+
+    window._tempAttachments = {};
+
+    switchTab(
+        workbook.activeSheetId,
+        true
+    );
+
+    updateAdminModeUI();
+    updateDashboardStats();
+}
 
         function closeBanner() {
             const banner = document.getElementById('api-status-banner');
@@ -2470,10 +3183,25 @@ function deleteTab(sheetId) {
         // E. 表格核心 DOM 增刪與渲染
         // ----------------------------------------------------
         function addNewRow(initialData = null, customId = null, skipSave = false) {
-            if (!skipSave && !canEditData()) {
-    showToast("請先登入使用者或管理者權限。", "warning");
-    openAdminModal();
-    return;
+if (!skipSave) {
+    if (!canEditData()) {
+        showToast(
+            '請先登入使用者或管理者權限。',
+            'warning'
+        );
+
+        openAdminModal();
+        return;
+    }
+
+    if (!canEditRiskMatrixNow()) {
+        showToast(
+            '請先點擊編輯按鈕進入編輯模式。',
+            'warning'
+        );
+
+        return;
+    }
 }
             const rowId = customId !== null ? customId : ++rowCounter;
             if (customId !== null && customId > rowCounter) {
@@ -2633,7 +3361,7 @@ class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
             }
 
             // 在 addNewRow 結尾處，依據權限狀態設定該列的輸入框
-if (!canEditData()) {
+if (!canEditRiskMatrixNow()) {
     const newRowInputs = tr.querySelectorAll('input, textarea');
     newRowInputs.forEach(input => {
         if (input.type === 'checkbox') {
@@ -2678,22 +3406,107 @@ updateDashboardStats();
             calculateRisk(rowId);
         }
 
-function deleteRow(rowId) {
+async function deleteRow(rowId) {
+    /*
+     * 僅限管理者，且必須已進入編輯模式。
+     */
     if (!canDeleteData()) {
-        showToast("只有管理者可以刪除評估項次。", "error");
+        showToast(
+            '只有管理者並進入編輯模式後，才可以刪除評估項次。',
+            'error'
+        );
         return;
     }
 
-    const tr = document.getElementById(`osra-row-${rowId}`);
-    if (tr) {
-        tr.remove();
-        osraData = osraData.filter(item => item.id !== rowId);
-        delete window._tempAttachments[rowId];
-        syncWorkbook();
-        showToast(`已成功移除項次`, 'warning');
-        reindexRows();
-        updateDashboardStats();
+    const tr =
+        document.getElementById(
+            `osra-row-${rowId}`
+        );
+
+    if (!tr) {
+        showToast(
+            '找不到要刪除的評估項次。',
+            'error'
+        );
+        return;
     }
+
+    /*
+     * 先取得畫面項次、作業名稱及附件數量，
+     * 供確認通知視窗顯示。
+     */
+    const itemNo =
+        getDisplayItemNo(rowId);
+
+    const titleInput =
+        document.getElementById(
+            `title-${rowId}`
+        );
+
+    const jobTitle =
+        titleInput &&
+        titleInput.value.trim()
+            ? titleInput.value.trim()
+            : '未填寫作業名稱';
+
+    const attachments =
+        window._tempAttachments &&
+        Array.isArray(
+            window._tempAttachments[rowId]
+        )
+            ? window._tempAttachments[rowId]
+            : [];
+
+    const attachmentMessage =
+        attachments.length > 0
+            ? `\n此項次含有 ${attachments.length} 個附件，將一併刪除。`
+            : '';
+
+    /*
+     * 刪除前確認通知。
+     */
+    const confirmed =
+        confirm(
+            `確定要刪除評估項次 ${itemNo}「${jobTitle}」嗎？` +
+            attachmentMessage +
+            '\n\n刪除後將無法復原。'
+        );
+
+    if (!confirmed) {
+        return;
+    }
+
+    /*
+     * 執行畫面及記憶體資料刪除。
+     */
+    tr.remove();
+
+    osraData =
+        osraData.filter(
+            item => item.id !== rowId
+        );
+
+    delete window
+        ._tempAttachments[rowId];
+
+    reindexRows();
+    updateDashboardStats();
+
+    /*
+     * 刪除項次後，原本的 AI 稽核結果已失效。
+     */
+    markAuditAsOutdatedForCurrentSheet();
+
+    /*
+     * 等待 IndexedDB 儲存完成後，
+     * 才顯示刪除完成訊息。
+     */
+    await syncWorkbook();
+
+    showToast(
+        `評估項次 ${itemNo} 已刪除。`,
+        'warning'
+    );
 }
 
         function duplicateRow(rowId) {
@@ -2863,8 +3676,11 @@ function updateRowState(rowId) {
         // H. 本地與遠端智慧模擬雙向引擎 (AI Integration Engine)
         // ----------------------------------------------------
         async function triggerRowAi(rowId) {
-    if (!canEditData()) {
-        showToast("請先登入使用者或管理者權限後再使用 AI 自動完成。", "warning");
+    if (!canEditRiskMatrixNow()) {
+        showToast(
+    '請先點擊編輯按鈕進入編輯模式。',
+    'warning'
+);
         openAdminModal();
         return;
     }
@@ -2884,8 +3700,11 @@ function updateRowState(rowId) {
         }
 
         async function triggerControlAi(rowId) {
-    if (!canEditData()) {
-        showToast("請先登入使用者或管理者權限後再使用 AI 控制建議。", "warning");
+    if (!canEditRiskMatrixNow()) {
+        showToast(
+    '請先點擊編輯按鈕進入編輯模式。',
+    'warning'
+);
         openAdminModal();
         return;
     }
@@ -3727,15 +4546,46 @@ const targetRate = total > 0
         // N. 管理員登入與驗證邏輯處理 (含管理員權限介面動態呈現)
         // ----------------------------------------------------
 async function toggleAdmin() {
+    /*
+     * 已登入時維持原本的
+     * 儲存並登出流程。
+     */
     if (canEditData()) {
-        if (confirm("是否儲存並登出系統？")) {
+        if (
+            confirm(
+                '是否儲存並登出系統？'
+            )
+        ) {
             await manualSaveRecords();
+
             lockAdmin();
             closeAdminModal();
             closePermissionSettingsModal();
-            showToast("已儲存並登出系統。", "info");
+
+            showToast(
+                '已儲存並登出系統。',
+                'info'
+            );
         }
+
         return;
+    }
+
+    /*
+     * 比照績效管理系統：
+     * 預覽資料存在時，
+     * 登入前先詢問是否退出預覽。
+     */
+    if (isPreviewDataMode) {
+        if (
+            !confirm(
+                '登入前將先退出預覽並清除目前預覽資料，是否繼續？'
+            )
+        ) {
+            return;
+        }
+
+        clearViewerWorkspace();
     }
 
     openAdminModal();
@@ -3845,33 +4695,244 @@ function switchAdminTab(tab) {
         }
 
 function updateJsonActionButtons() {
-    const exportBtn = document.getElementById('export-json-btn');
-    const exportLabel = document.getElementById('export-json-label');
-    const loadLabel = document.getElementById('load-json-label');
+    const exportBtn =
+        document.getElementById(
+            'export-json-btn'
+        );
+
+    const loadBtn =
+        document.getElementById(
+            'load-json-btn'
+        );
 
     if (exportBtn) {
-        exportBtn.classList.toggle('hidden', !canExportReviewData());
+        exportBtn.classList.toggle(
+            'hidden',
+            !canExportReviewData()
+        );
     }
 
-    if (exportLabel) {
+    if (loadBtn) {
+        let iconName =
+            'file-search';
+
+        let label =
+            '載入預覽';
+
+        let title =
+            '載入 JSON 預覽資料';
+
         if (isAdminAuthenticated) {
-            exportLabel.innerText = '匯出資料';
-        } else if (isEditorAuthenticated) {
-            exportLabel.innerText = '匯出資料';
-        } else {
-            exportLabel.innerText = '匯出資料';
+            iconName =
+                'file-input';
+
+            label =
+                '匯入資料';
+
+            title =
+                '匯入並覆蓋正式資料';
+
+        } else if (
+            isEditorAuthenticated
+        ) {
+            iconName =
+                'file-input';
+
+            label =
+                '載入資料';
+
+            title =
+                '載入並覆蓋正式資料';
+
+        } else if (
+            isPreviewDataMode
+        ) {
+            /*
+             * 比照績效管理系統：
+             * eye-off ＋ 退出預覽。
+             */
+            iconName =
+                'eye-off';
+
+            label =
+                '退出預覽';
+
+            title =
+                '退出目前預覽資料';
         }
+
+        loadBtn.innerHTML = `
+            <i
+                data-lucide="${iconName}"
+                class="w-4 h-4"
+            ></i>
+
+            <span id="load-json-label">
+                ${label}
+            </span>
+        `;
+
+        loadBtn.title =
+            title;
     }
 
-    if (loadLabel) {
-        if (isAdminAuthenticated) {
-            loadLabel.innerText = '匯入資料';
-        } else if (isEditorAuthenticated) {
-            loadLabel.innerText = '載入資料';
-        } else {
-            loadLabel.innerText = '載入預覽';
-        }
+    /*
+     * 重新渲染動態插入的 Lucide 圖示。
+     */
+    if (window.lucide) {
+        lucide.createIcons();
     }
+}
+
+/* =========================================================
+   風險評估矩陣編輯／檢視控制
+========================================================= */
+function updateRiskEditModeControls() {
+    const editBtn =
+        document.getElementById(
+            'risk-edit-toggle-btn'
+        );
+
+    const saveBtn =
+        document.getElementById(
+            'save-records-btn'
+        );
+
+    const showControls =
+        canEditData() &&
+        !isPreviewDataMode;
+
+    /*
+     * 未登入或進入預覽模式時，
+     * 強制退出矩陣編輯模式。
+     */
+    if (!showControls) {
+        isRiskEditMode = false;
+    }
+
+    if (editBtn) {
+        editBtn.classList.toggle(
+            'hidden',
+            !showControls
+        );
+
+        editBtn.classList.toggle(
+            'is-view',
+            !isRiskEditMode
+        );
+
+        editBtn.classList.toggle(
+            'is-editing',
+            isRiskEditMode
+        );
+
+        editBtn.innerHTML = `
+            <i class="fa-solid ${
+                isRiskEditMode
+                    ? 'fa-circle-check'
+                    : 'fa-pen-to-square'
+            }"></i>
+        `;
+
+        editBtn.title =
+            isRiskEditMode
+                ? '結束編輯並切換為檢視模式'
+                : '進入風險評估矩陣編輯模式';
+
+        editBtn.setAttribute(
+            'aria-label',
+            editBtn.title
+        );
+    }
+
+    if (saveBtn) {
+        saveBtn.classList.toggle(
+            'hidden',
+            !showControls
+        );
+    }
+}
+
+/*
+ * 將矩陣所有輸入元件切換為
+ * 可編輯或唯讀狀態。
+ */
+function applyRiskMatrixReadOnlyState() {
+    const editable =
+        canEditRiskMatrixNow();
+
+    const tableInputs =
+        document.querySelectorAll(
+            '#osraTable input, ' +
+            '#osraTable textarea'
+        );
+
+    tableInputs.forEach(input => {
+        if (input.type === 'checkbox') {
+            input.disabled =
+                !editable;
+
+            return;
+        }
+
+        input.readOnly =
+            !editable;
+
+        /*
+         * 先保存原始提示文字，
+         * 檢視模式隱藏，編輯模式恢復。
+         */
+        if (
+            !(
+                'origPlaceholder' in
+                input.dataset
+            )
+        ) {
+            input.dataset.origPlaceholder =
+                input.getAttribute(
+                    'placeholder'
+                ) || '';
+        }
+
+        input.placeholder =
+            editable
+                ? input.dataset
+                    .origPlaceholder
+                : '';
+    });
+}
+
+function toggleRiskEditMode() {
+    if (!canEditData()) {
+        showToast(
+            '請先登入使用者或管理者權限。',
+            'warning'
+        );
+
+        openAdminModal();
+        return;
+    }
+
+    if (isPreviewDataMode) {
+        showToast(
+            '目前為預覽資料模式，不能進入編輯模式。',
+            'warning'
+        );
+
+        return;
+    }
+
+    isRiskEditMode =
+        !isRiskEditMode;
+
+    updateAdminModeUI();
+
+    showToast(
+        isRiskEditMode
+            ? '已進入風險評估矩陣編輯模式'
+            : '已切換為風險評估矩陣檢視模式',
+        'success'
+    );
 }
 
 function updateAdminModeUI() {
@@ -3899,8 +4960,27 @@ if (passwordTabBtn) {
     }
 }
 
-    document.body.classList.toggle('admin-mode', isAdminAuthenticated);
-    document.body.classList.toggle('edit-mode', canEditData());
+/*
+ * 先更新編輯按鈕，
+ * 若目前無權限會同步關閉編輯狀態。
+ */
+updateRiskEditModeControls();
+
+document.body.classList.toggle(
+    'admin-mode',
+    isAdminAuthenticated
+);
+
+/*
+ * edit-mode 不再等於登入狀態。
+ *
+ * 只有主動點擊編輯後，
+ * 才加入 edit-mode。
+ */
+document.body.classList.toggle(
+    'edit-mode',
+    canEditRiskMatrixNow()
+);
 
 if (permissionBtn) {
     permissionBtn.classList.toggle('hidden', !isAdminAuthenticated);
@@ -3955,23 +5035,12 @@ if (mobileIcon) mobileIcon.className = "fa-solid fa-unlock-keyhole text-emerald-
         }
     }
 
-    const tableInputs = document.querySelectorAll('#osraTable input, #osraTable textarea');
-    tableInputs.forEach(input => {
-        if (input.type === 'checkbox') {
-            input.disabled = !canEditData();
-        } else {
-            input.readOnly = !canEditData();
+/*
+ * 依矩陣編輯模式設定輸入欄位。
+ */
+applyRiskMatrixReadOnlyState();
 
-            if (!canEditData() && !input.dataset.origPlaceholder) {
-                input.dataset.origPlaceholder = input.placeholder;
-                input.placeholder = "";
-            } else if (canEditData() && input.dataset.origPlaceholder) {
-                input.placeholder = input.dataset.origPlaceholder;
-            }
-        }
-    });
-
-    updateJsonActionButtons();
+updateJsonActionButtons();
 }
 
 async function verifyAdminPassword() {
@@ -4020,31 +5089,58 @@ editorEnabled = Boolean(savedEditorEnabled);
         return;
     }
 
-    if (input === systemPassword) {
-        isAdminAuthenticated = true;
-        isEditorAuthenticated = true;
+if (input === systemPassword) {
+    isAdminAuthenticated = true;
+    isEditorAuthenticated = true;
 
-        updateAdminModeUI();
+    /*
+     * 登入後預設為檢視模式。
+     */
+    isRiskEditMode = false;
 
-        showToast("管理者登入成功，已進入完整權限模式。", "success");
-        closeAdminModal();
+    await loadFormalWorkbookIntoWorkspace();
 
-        document.getElementById('adminPasswordInput').value = '';
-        return;
-    }
+    showToast(
+        '管理者登入成功，已進入完整權限模式。',
+        'success'
+    );
 
-    if (editorEnabled && input === editorPassword) {
-        isAdminAuthenticated = false;
-        isEditorAuthenticated = true;
+    closeAdminModal();
 
-        updateAdminModeUI();
+    document.getElementById(
+        'adminPasswordInput'
+    ).value = '';
 
-        showToast("使用者登入成功，已進入資料編輯模式。", "success");
-        closeAdminModal();
+    return;
+}
 
-        document.getElementById('adminPasswordInput').value = '';
-        return;
-    }
+if (
+    editorEnabled &&
+    input === editorPassword
+) {
+    isAdminAuthenticated = false;
+    isEditorAuthenticated = true;
+
+    /*
+     * 使用者登入後也預設為檢視模式。
+     */
+    isRiskEditMode = false;
+
+    await loadFormalWorkbookIntoWorkspace();
+
+    showToast(
+        '使用者登入成功，已進入資料檢視模式。',
+        'success'
+    );
+
+    closeAdminModal();
+
+    document.getElementById(
+        'adminPasswordInput'
+    ).value = '';
+
+    return;
+}
 
     showToast("密碼錯誤，請重新輸入！", "error");
 }
@@ -4100,6 +5196,7 @@ closePermissionSettingsModal();
 }
 
 function lockAdmin() {
+isRiskEditMode = false;
     isAdminAuthenticated = false;
     isEditorAuthenticated = false;
 
@@ -4116,8 +5213,13 @@ function lockAdmin() {
         settingsScreen.classList.add('hidden');
     }
 
-    updateAdminModeUI();
-    switchAdminTab('login');
+/*
+ * 返回空白預覽者畫面，
+ * 但不刪除 IndexedDB 正式資料。
+ */
+clearViewerWorkspace();
+
+switchAdminTab('login');
 }
 
         // ----------------------------------------------------
@@ -4207,6 +5309,50 @@ function applyImportedRiskAssessmentData(importedData) {
     throw new Error("此檔案不是合法的 OSRA 評估資料格式。");
 }
 
+function handleLoadJsonAction() {
+    /*
+     * 預覽者已載入預覽資料：
+     * 同一顆按鈕改為退出預覽。
+     */
+    if (
+        !canEditData() &&
+        isPreviewDataMode
+    ) {
+        confirmExitPreview();
+        return;
+    }
+
+    const input =
+        document.getElementById(
+            'dbImportInput'
+        );
+
+    if (input) {
+        input.click();
+    }
+}
+
+function confirmExitPreview() {
+    if (!isPreviewDataMode) {
+        return;
+    }
+
+    if (
+        !confirm(
+            '確定退出預覽？目前預覽資料將被清除。'
+        )
+    ) {
+        return;
+    }
+
+    clearViewerWorkspace();
+
+    showToast(
+        '已退出預覽',
+        'success'
+    );
+}
+
         async function handleJsonFileLoad(event) {
     if (canImportData()) {
         await importFromJson(event);
@@ -4238,6 +5384,7 @@ async function loadPreviewJson(event) {
              * 預覽模式只更新目前頁面，不寫入 IndexedDB。
              */
             isPreviewDataMode = true;
+isRiskEditMode = false;
 
             switchTab(workbook.activeSheetId, true);
             updateAdminModeUI();
@@ -4290,6 +5437,7 @@ async function importFromJson(event) {
              * 密碼、權限與 API 設定維持目前瀏覽器原本設定。
              */
             isPreviewDataMode = false;
+            isRiskEditMode = false;
 
             await setDBValue('workbook', workbook);
 
@@ -4403,7 +5551,7 @@ function updateAttachmentUI(rowId, attachments) {
         }
 
 function processFiles(files) {
-    if (!canEditData()) {
+    if (!canEditRiskMatrixNow()) {
         showToast("請先登入使用者或管理者權限後再上傳附件。", "warning");
         openAdminModal();
         return;
