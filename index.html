@@ -681,6 +681,70 @@ body.file-preview-open {
         white-space: nowrap;
     }
 
+/* =========================================================
+   手機直式表頭功能排列
+
+   第一排：
+   列印 / PDF｜權限登入與權限設定
+
+   第二排：
+   匯出資料｜載入或匯入資料
+========================================================= */
+
+/* 第一排左側 */
+nav #print-pdf-btn {
+    order: 1;
+    grid-column: auto;
+    min-height: 42px;
+}
+
+/* 第一排右側 */
+nav #mobile-auth-actions {
+    order: 2;
+
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+
+    gap: 8px;
+}
+
+/*
+ * 上層的共用 button 規則會將所有按鈕設為 width: 100%。
+ * 手機權限圖示必須在這裡改回固定正方形。
+ */
+nav #mobile-auth-actions button {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    flex: 0 0 42px !important;
+
+    padding: 0 !important;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+    font-size: 14px;
+}
+
+/* 第二排左側 */
+nav #export-json-btn {
+    order: 3;
+    min-height: 42px;
+}
+
+/* 第二排右側 */
+nav #load-json-btn {
+    order: 4;
+    min-height: 42px;
+}    
+
 /* 手機版：隱藏功能按鈕區裡原本的管理員鑰匙 */
 nav #admin-toggle-btn {
     display: none !important;
@@ -997,6 +1061,20 @@ nav p {
     }
 
     /*
+ * 手機直式與橫式：
+ * 預覽／檢視模式下將矩陣欄位恢復為適當比例。
+ *
+ * 進入編輯模式後仍使用前面的 16px，
+ * 避免 Safari 聚焦輸入框時放大頁面。
+ */
+body:not(.edit-mode) #osraTable input,
+body:not(.edit-mode) #osraTable textarea,
+body:not(.edit-mode) #osraTable select {
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+}
+
+    /*
      * 矩陣數字輸入框維持固定寬度，
      * 避免改為 16px 後欄位被撐開。
      */
@@ -1078,11 +1156,6 @@ div:not(:first-child) > div {
 #risk-level-content >
 div:not(:first-child) > div > div + div {
     margin-top: 5px;
-}
-
-#risk-level-content >
-div:not(:first-child) > div > div + div {
-    margin-top: 4px;
 }
 
 /* AI 稽核區精簡 */
@@ -1235,31 +1308,263 @@ and (max-width: 1023px) {
 
 /* =========================================================
    手機直式：
-   維持上下排列，避免三欄文字過度擁擠
+   風險基準圖卡維持單欄，並提高文字閱讀性
 ========================================================= */
 @media screen
 and (orientation: portrait)
 and (max-width: 767px) {
 
+    /*
+     * 4×4矩陣與三張說明卡，
+     * 手機直式全部採單欄排列。
+     */
     #risk-level-content {
         grid-template-columns:
             minmax(0, 1fr) !important;
+
+        gap: 10px !important;
     }
 
     #risk-level-content > div:first-child {
         grid-column: auto !important;
     }
 
+    /*
+     * 三張圖卡標題列。
+     */
     #risk-level-content >
     div:not(:first-child) > span {
-        font-size: 10px !important;
+        margin: 0 !important;
+
+        padding: 8px 10px !important;
+
+        font-size: 11px !important;
+        line-height: 1.3 !important;
     }
 
+    /*
+     * 三張圖卡說明內容。
+     */
     #risk-level-content >
     div:not(:first-child) > div {
-        font-size: 9.5px !important;
-        line-height: 1.35 !important;
+        display: grid;
+
+        gap: 6px;
+
+        padding: 8px !important;
+
+        font-size: 10.5px !important;
+        line-height: 1.45 !important;
     }
+
+    /*
+     * S4～S1、P4～P1及風險等級
+     * 每一項的內距。
+     */
+    #risk-level-content >
+    div:not(:first-child) >
+    div > div {
+        margin: 0 !important;
+
+        padding: 7px 8px;
+    }
+}
+
+/* =========================================================
+   風險基準說明圖卡美化
+========================================================= */
+
+/* 三張說明卡外框 */
+#risk-level-content >
+div:not(:first-child) {
+    overflow: hidden;
+
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+
+    box-shadow:
+        0 2px 8px
+        rgba(15, 23, 42, 0.06);
+}
+
+/* 三張卡標題列 */
+#risk-level-content >
+div:not(:first-child) > span {
+    margin: 0 !important;
+    padding: 7px 9px;
+
+    border-bottom:
+        1px solid #e2e8f0;
+
+    font-size: 10.5px !important;
+    line-height: 1.25 !important;
+}
+
+/* 嚴重度標題 */
+#risk-level-content >
+div:nth-child(2) > span {
+    background: #fff1f2;
+}
+
+/* 發生可能性標題 */
+#risk-level-content >
+div:nth-child(3) > span {
+    background: #eff6ff;
+}
+
+/* 控制規劃標題 */
+#risk-level-content >
+div:nth-child(4) > span {
+    background: #ecfdf5;
+}
+
+/* 說明內容區 */
+#risk-level-content >
+div:not(:first-child) > div {
+    display: grid;
+    gap: 5px;
+
+    padding: 7px !important;
+
+    background: #ffffff !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+
+    font-size: 9.5px !important;
+    line-height: 1.4 !important;
+}
+
+/* 每一個等級獨立成一列 */
+#risk-level-content >
+div:not(:first-child) > div > div {
+    margin: 0 !important;
+    padding: 5px 7px;
+
+    background: #f8fafc;
+    border-left: 3px solid #cbd5e1;
+    border-radius: 6px;
+}
+
+/* 第一級：紅色 */
+#risk-level-content >
+div:not(:first-child) > div >
+div:nth-child(1) {
+    border-left-color: #dc2626;
+}
+
+/* 第二級：橘色 */
+#risk-level-content >
+div:not(:first-child) > div >
+div:nth-child(2) {
+    border-left-color: #f97316;
+}
+
+/* 第三級：黃色 */
+#risk-level-content >
+div:not(:first-child) > div >
+div:nth-child(3) {
+    border-left-color: #d97706;
+}
+
+/* 第四級：綠色 */
+#risk-level-content >
+div:not(:first-child) > div >
+div:nth-child(4) {
+    border-left-color: #16a34a;
+}
+
+/* =========================================================
+   批次智慧生成：
+   範例提示文字縮小，實際輸入字體維持正常
+========================================================= */
+#bulkTasksInput::placeholder {
+    color: #94a3b8 !important;
+
+    font-size: 12px !important;
+    line-height: 1.55 !important;
+    font-weight: 400 !important;
+
+    letter-spacing: 0.01em;
+    opacity: 1;
+}
+
+/* =========================================================
+   附件資料管理上傳框
+   比照績效管理系統的虛線與滑入效果
+========================================================= */
+.attachment-upload-zone {
+    width: 100%;
+    min-height: 108px;
+
+    border: 2px dashed #bfdbfe;
+    background: #f8fbff;
+    border-radius: 16px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+    padding: 16px;
+
+    color: #2563eb;
+    cursor: pointer;
+
+    transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+}
+
+/*
+ * 滑鼠移入及檔案拖入時，
+ * 比照績效系統改為較明顯的藍色虛線。
+ */
+.attachment-upload-zone:hover,
+#attachment-upload-zone.drag-over {
+    border-color: #60a5fa;
+    background: #eff6ff;
+    transform: none;
+}
+
+.attachment-upload-icon {
+    margin-bottom: 2px;
+
+    color: #60a5fa;
+    font-size: 24px;
+
+    transition:
+        color 0.2s ease;
+}
+
+.attachment-upload-zone:hover
+.attachment-upload-icon,
+#attachment-upload-zone.drag-over
+.attachment-upload-icon {
+    color: #3b82f6;
+}
+
+.attachment-upload-main {
+    margin: 0;
+
+    color: #2563eb;
+    font-size: 14px;
+    line-height: 1.35;
+    font-weight: 700;
+
+    text-align: center;
+}
+
+.attachment-upload-sub {
+    margin: 0;
+
+    color: #64748b;
+    font-size: 11px;
+    line-height: 1.35;
+    font-weight: 500;
+
+    text-align: center;
 }
 
         /* 列印專用樣式 */
@@ -1278,6 +1583,21 @@ and (max-width: 767px) {
             /* 隱藏非表格區域 */
 nav, footer, #dashboard-stats, #bottom-panels, #toast-container, #adminModal, #attachmentModal, #file-preview-modal, #sheet-tabs-container {
     display: none !important;
+}
+
+/* 列印時隱藏矩陣表頭所有功能按鈕 */
+#matrix-action-buttons {
+    display: none !important;
+}
+
+/* 按鈕隱藏後，標題靠左排列 */
+#matrix-panel-header {
+    justify-content: flex-start !important;
+}
+
+/* 防止標題因右側按鈕消失而保留多餘空間 */
+#matrix-panel-title {
+    width: 100% !important;
 }
 
             body {
@@ -1456,36 +1776,53 @@ table.osra-table textarea::placeholder {
                 </h1>
                 <p class="text-slate-400 text-sm font-mono">OCCUPATIONAL SAFETY RISK ASSESSMENT SYSTEM</p>
             </div>
-
-<!-- 手機版管理員權限按鈕組：只在手機標題區顯示 -->
-<div class="flex items-center gap-2 shrink-0">
-    <button
-        id="mobile-admin-toggle-btn"
-        onclick="toggleAdmin()"
-        class="mobile-admin-key-btn hidden bg-slate-800 hover:bg-slate-700 text-yellow-500 hover:text-yellow-400 p-2.5 rounded-lg text-sm font-medium transition items-center justify-center border border-slate-700 shrink-0"
-        title="管理員登入"
-    >
-        <i id="mobile-admin-key-icon" class="fa-solid fa-key"></i>
-    </button>
-
-    <button
-        id="mobile-permission-settings-btn"
-        onclick="openPermissionSettingsModal()"
-        class="hidden bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-cyan-300 p-2.5 rounded-lg text-sm font-medium transition items-center justify-center border border-cyan-700 shrink-0"
-        title="權限與密碼設定"
-    >
-        <i class="fa-solid fa-gear"></i>
-    </button>
-</div>
         </div>
     </div>
 </div>
             
             <!-- 導航功能按鈕組：簡潔精緻單排按鈕群 -->
             <div class="flex flex-wrap justify-center lg:justify-end items-center gap-2.5 w-full lg:w-auto">
-                <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-sm">
-                    <i class="fa-solid fa-print"></i> 列印 / PDF
-                </button>
+<!-- 手機直式第一排左側：列印 -->
+<button
+    id="print-pdf-btn"
+    type="button"
+    onclick="printRiskAssessment()"
+    class="bg-slate-700 hover:bg-slate-600 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow-sm"
+>
+    <i class="fa-solid fa-print"></i>
+    <span>列印 / PDF</span>
+</button>
+
+<!-- 手機直式第一排右側：登入／登出與權限設定 -->
+<div
+    id="mobile-auth-actions"
+    class="hidden items-center justify-center gap-2 min-w-0"
+>
+    <button
+        id="mobile-admin-toggle-btn"
+        type="button"
+        onclick="toggleAdmin()"
+        class="mobile-admin-key-btn hidden bg-slate-800 hover:bg-slate-700 text-yellow-500 hover:text-yellow-400 rounded-lg text-sm font-medium transition items-center justify-center border border-slate-700 shrink-0"
+        title="權限登入"
+        aria-label="權限登入"
+    >
+        <i
+            id="mobile-admin-key-icon"
+            class="fa-solid fa-key"
+        ></i>
+    </button>
+
+    <button
+        id="mobile-permission-settings-btn"
+        type="button"
+        onclick="openPermissionSettingsModal()"
+        class="hidden bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-cyan-300 rounded-lg text-sm font-medium transition items-center justify-center border border-cyan-700 shrink-0"
+        title="權限與密碼設定"
+        aria-label="權限與密碼設定"
+    >
+        <i class="fa-solid fa-gear"></i>
+    </button>
+</div>
 
 <button id="export-json-btn"
         onclick="exportToJson()"
@@ -2108,10 +2445,18 @@ class="group relative overflow-visible
 </div>
 
     <!-- 彈窗3：附件上傳與管理 Modal (新增) -->
-<div id="bulkImportModal" onclick="closeBulkImportModalOutside(event)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-    <div onclick="event.stopPropagation()" class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-2xl w-full p-6 mx-4">
-        <div class="flex justify-between items-center border-b pb-3">
-            <h3 class="font-bold text-lg text-slate-900 flex items-center gap-2">
+<div
+    id="bulkImportModal"
+    onclick="closeBulkImportModalOutside(event)"
+    class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-3 sm:p-4"
+>
+    <div
+        id="bulk-import-panel"
+        onclick="event.stopPropagation()"
+        class="bg-white w-full max-w-lg max-h-[86dvh] overflow-y-auto rounded-xl shadow-xl border border-slate-200 p-4 sm:p-5"
+    >
+<div class="flex justify-between items-center border-b pb-2">
+    <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
                 <i class="fa-solid fa-file-import text-indigo-600"></i>
                 批次智慧生成
             </h3>
@@ -2120,15 +2465,15 @@ class="group relative overflow-visible
             </button>
         </div>
 
-        <div class="mt-4 space-y-3">
+        <div class="mt-3 space-y-2.5">
             <p class="text-xs text-slate-500">
                 請每行輸入一項作業名稱，系統會依序建立職安危害辨識與風險評估資料。
             </p>
 
-            <textarea
-                id="bulkTasksInput"
-                rows="10"
-                class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+<textarea
+    id="bulkTasksInput"
+    rows="7"
+    class="w-full min-h-[145px] max-h-[36dvh] border border-slate-300 rounded-lg p-2.5 text-sm leading-relaxed resize-y focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="例如：
 高處更換天花板 LED 燈管
 使用有機溶劑擦拭主機板線路
@@ -2138,7 +2483,7 @@ class="group relative overflow-visible
             <div class="flex justify-between items-center gap-2 pt-2">
                 <button
                     onclick="loadSampleTasks()"
-                    class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition"
+                    class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition"
                 >
                     <i class="fa-solid fa-list-check mr-1"></i>
                     載入範例
@@ -2147,14 +2492,14 @@ class="group relative overflow-visible
                 <div class="flex gap-2">
                     <button
                         onclick="closeBulkImportModal()"
-                        class="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-semibold transition"
+                        class="px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-semibold transition"
                     >
                         取消
                     </button>
 
                     <button
                         onclick="executeBulkGenerate()"
-                        class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition shadow"
+                        class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition shadow"
                     >
                         <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>
                         開始批次生成
@@ -2164,27 +2509,64 @@ class="group relative overflow-visible
         </div>
     </div>
 </div>     
-    <div id="attachmentModal" onclick="closeAttachmentModalOutside(event)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div onclick="event.stopPropagation()" class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full p-6 animate-fade-in mx-4 flex flex-col max-h-[90vh]">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-lg text-slate-900 flex items-center gap-2">
-                    <i class="fa-solid fa-folder-open text-blue-600"></i> 附件資料管理 <span id="attach-modal-title" class="text-sm font-normal text-slate-500 ml-2"></span>
+<div
+    id="attachmentModal"
+    onclick="closeAttachmentModalOutside(event)"
+    class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-3 sm:p-4"
+>
+    <div
+        id="attachment-modal-panel"
+        onclick="event.stopPropagation()"
+        class="bg-white w-full max-w-md max-h-[82dvh] rounded-xl shadow-xl border border-slate-200 p-4 sm:p-5 animate-fade-in flex flex-col"
+    >
+<div class="flex justify-between items-center border-b pb-2">
+    <h3 class="font-bold text-base text-slate-900 flex items-center gap-2 min-w-0">
+                    <i class="fa-solid fa-folder-open text-blue-600"></i> 附件資料管理 <span
+    id="attach-modal-title"
+    class="text-xs font-normal text-slate-500 ml-1 truncate"
+></span>
                 </h3>
                 <button onclick="closeAttachmentModal()" class="text-slate-400 hover:text-slate-600">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
             
-            <!-- 上傳區 (Admin Only) -->
-            <div id="attachment-upload-zone" class="admin-edit-block mt-4 border-2 border-dashed border-blue-200 rounded-xl p-6 flex items-center justify-center bg-blue-50/50 text-blue-800 transition hover:bg-blue-50 cursor-pointer flex-col" ondragenter="handleDragOver(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" onclick="document.getElementById('attachmentInput').click()">
-                <i class="fa-solid fa-cloud-arrow-up text-3xl mb-2 text-blue-400"></i>
-                <p class="text-sm font-bold">點擊或拖放檔案至此處上傳</p>
-                <p class="text-[10px] mt-1 text-slate-500">支援 PDF, PNG, JPG (單檔最大 5MB)</p>
-                <input type="file" id="attachmentInput" accept=".pdf,.png,.jpg,.jpeg" class="hidden" multiple onchange="handleFileUpload(event)">
-            </div>
+<!-- 上傳區：管理者及使用者進入編輯模式後顯示 -->
+<div
+    id="attachment-upload-zone"
+    class="admin-edit-block mt-3 attachment-upload-zone"
+
+    onclick="document.getElementById('attachmentInput').click()"
+
+    ondragenter="handleDragOver(event)"
+    ondragover="handleDragOver(event)"
+    ondragleave="handleDragLeave(event)"
+    ondrop="handleDrop(event)"
+>
+    <i
+        class="fa-solid fa-cloud-arrow-up attachment-upload-icon"
+    ></i>
+
+    <p class="attachment-upload-main">
+        點擊或拖放檔案至此處上傳
+    </p>
+
+    <p class="attachment-upload-sub">
+        支援 PDF、PNG、JPG（單檔最大 5MB）
+    </p>
+
+    <input
+        type="file"
+        id="attachmentInput"
+        accept=".pdf,.png,.jpg,.jpeg"
+        class="hidden"
+        multiple
+        onchange="handleFileUpload(event)"
+    >
+</div>
 
             <!-- 附件列表 -->
-            <div class="mt-4 flex-1 overflow-y-auto min-h-[150px] pr-1">
+            <div class="mt-3 flex-1 overflow-y-auto min-h-[110px] max-h-[42dvh] pr-1">
                 <h4 class="text-xs font-bold text-slate-700 mb-2 border-b pb-1">已上傳檔案清單 (點擊可預覽)</h4>
                 <ul id="attachment-list" class="space-y-2">
                     <!-- JS 動態插入 -->
@@ -5526,29 +5908,58 @@ function updateAttachmentUI(rowId, attachments) {
             });
         }
 
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.currentTarget.classList.add('bg-blue-100', 'border-blue-400');
-        }
-        
-        function handleDragLeave(e) {
-            e.preventDefault();
-            e.currentTarget.classList.remove('bg-blue-100', 'border-blue-400');
-        }
-        
-        function handleDrop(e) {
-            e.preventDefault();
-            e.currentTarget.classList.remove('bg-blue-100', 'border-blue-400');
-            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                processFiles(e.dataTransfer.files);
-            }
-        }
-        
-        function handleFileUpload(e) {
-            if (e.target.files && e.target.files.length > 0) {
-                processFiles(e.target.files);
-            }
-        }
+function handleDragOver(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    event.currentTarget.classList.add(
+        'drag-over'
+    );
+}
+
+function handleDragLeave(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    /*
+     * 滑鼠仍在上傳框內部子元素移動時，
+     * 不要反覆移除拖入效果。
+     */
+    if (
+        event.relatedTarget &&
+        event.currentTarget.contains(
+            event.relatedTarget
+        )
+    ) {
+        return;
+    }
+
+    event.currentTarget.classList.remove(
+        'drag-over'
+    );
+}
+
+function handleDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    event.currentTarget.classList.remove(
+        'drag-over'
+    );
+
+    const files =
+        event.dataTransfer &&
+        event.dataTransfer.files
+            ? event.dataTransfer.files
+            : null;
+
+    if (
+        files &&
+        files.length > 0
+    ) {
+        processFiles(files);
+    }
+}
 
 function processFiles(files) {
     if (!canEditRiskMatrixNow()) {
@@ -6326,6 +6737,58 @@ function previewAttachment(attId) {
     const previewFile = normalizeRiskPreviewFile(att);
     viewFileDirectly(previewFile, `項次 ${getDisplayItemNo(currentAttachmentRowId)}`);
 }
+
+/* =========================================================
+   列印前統一切換為檢視模式
+========================================================= */
+
+/*
+ * 不論從系統按鈕或瀏覽器列印功能進入，
+ * 列印前都強制退出矩陣編輯模式。
+ */
+function prepareRiskMatrixForPrint() {
+    if (!isRiskEditMode) {
+        return;
+    }
+
+    /*
+     * 只離開編輯模式，
+     * 不登出管理者或使用者權限。
+     */
+    isRiskEditMode = false;
+
+    /*
+     * 更新輸入欄位、管理欄位、
+     * 編輯按鈕及 body.edit-mode 狀態。
+     */
+    updateAdminModeUI();
+}
+
+/*
+ * 表頭「列印 / PDF」按鈕使用。
+ */
+function printRiskAssessment() {
+    prepareRiskMatrixForPrint();
+
+    /*
+     * 等待瀏覽器完成兩次畫面更新，
+     * 確保檢視模式已生效後再開啟列印。
+     */
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            window.print();
+        });
+    });
+}
+
+/*
+ * 使用 Ctrl+P 或瀏覽器選單列印時，
+ * 也同步切換為檢視模式。
+ */
+window.addEventListener(
+    'beforeprint',
+    prepareRiskMatrixForPrint
+);
 
 function expandTextareasForPrint() {
     document.querySelectorAll('#osraTable textarea').forEach(textarea => {
