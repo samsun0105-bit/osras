@@ -2085,18 +2085,54 @@ table.osra-table textarea::placeholder {
     <i class="fa-solid fa-download"></i>
     <span id="load-json-label">載入預覽</span>
 </button>
-<button id="admin-toggle-btn"
-        onclick="toggleAdmin()"
-        class="bg-slate-800 hover:bg-slate-700 text-yellow-500 hover:text-yellow-400 p-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center border border-slate-700"
-        title="權限登入 / 登出">
-    <i id="admin-key-icon" class="fa-solid fa-key"></i>
+<!--
+    桌機及手機橫式：
+    僅管理者顯示完整的「齒輪＋權限設定」按鈕
+-->
+<button
+    id="permission-settings-btn"
+    type="button"
+    onclick="openPermissionSettingsModal()"
+    class="hidden
+           bg-slate-800 hover:bg-slate-700
+           text-white
+           px-3.5 py-1.5
+           rounded-lg
+           text-sm font-medium
+           transition
+           items-center justify-center
+           gap-1.5
+           border border-cyan-700
+           shadow-md
+           whitespace-nowrap"
+    title="權限與密碼設定"
+    aria-label="權限與密碼設定"
+>
+    <i class="fa-solid fa-gear text-cyan-300"></i>
+    <span>權限設定</span>
 </button>
 
-<button id="permission-settings-btn"
-        onclick="openPermissionSettingsModal()"
-        class="hidden bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-cyan-300 p-2.5 rounded-lg text-sm font-medium transition items-center justify-center border border-cyan-700 shadow-md"
-        title="權限與密碼設定">
-    <i class="fa-solid fa-gear"></i>
+<!--
+    登入／登出固定放在功能列最右側
+-->
+<button
+    id="admin-toggle-btn"
+    type="button"
+    onclick="toggleAdmin()"
+    class="bg-slate-800 hover:bg-slate-700
+           text-yellow-500 hover:text-yellow-400
+           p-2.5 rounded-lg
+           text-sm font-medium
+           transition
+           flex items-center justify-center
+           border border-slate-700"
+    title="權限登入 / 登出"
+    aria-label="權限登入或登出"
+>
+    <i
+        id="admin-key-icon"
+        class="fa-solid fa-key"
+    ></i>
 </button>
             </div>
         </div>
