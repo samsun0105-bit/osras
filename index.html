@@ -682,50 +682,40 @@ body.file-preview-open {
     }
 
 /* =========================================================
-   手機直式表頭功能排列
+   手機直式表頭最終配置
 
-   第一排：
-   列印 / PDF｜權限登入與權限設定
+   預覽者：
+   標題右側鑰匙
+   列印 / PDF｜載入預覽
 
-   第二排：
-   匯出資料｜載入或匯入資料
+   使用者：
+   標題右側綠色解鎖
+   列印｜匯出｜載入
+
+   管理者：
+   標題右側黃色解鎖
+   列印 / PDF｜權限設定
+   匯出資料｜匯入資料
 ========================================================= */
 
-/* 第一排左側 */
-nav #print-pdf-btn {
-    order: 1;
-    grid-column: auto;
-    min-height: 42px;
+/* 手機版隱藏桌機權限按鈕 */
+nav #admin-toggle-btn,
+nav #permission-settings-btn {
+    display: none !important;
 }
 
-/* 第一排右側 */
-nav #mobile-auth-actions {
-    order: 2;
+/* 標題右側固定鑰匙／解鎖 */
+nav #mobile-admin-toggle-btn {
+    display: inline-flex !important;
 
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-
-    width: 100%;
-    min-width: 0;
-    min-height: 42px;
-
-    gap: 8px;
-}
-
-/*
- * 上層的共用 button 規則會將所有按鈕設為 width: 100%。
- * 手機權限圖示必須在這裡改回固定正方形。
- */
-nav #mobile-auth-actions button {
     width: 42px !important;
     height: 42px !important;
     min-width: 42px !important;
     flex: 0 0 42px !important;
 
     padding: 0 !important;
+    margin-top: 1px;
 
-    display: inline-flex;
     align-items: center;
     justify-content: center;
 
@@ -733,51 +723,267 @@ nav #mobile-auth-actions button {
     font-size: 14px;
 }
 
-/* 第二排左側 */
-nav #export-json-btn {
-    order: 3;
-    min-height: 42px;
-}
-
-/* 第二排右側 */
+/* 功能區基本按鈕高度 */
+nav #print-pdf-btn,
+nav #mobile-permission-settings-btn,
+nav #export-json-btn,
 nav #load-json-btn {
-    order: 4;
     min-height: 42px;
-}    
+}
 
-/* 手機版：隱藏功能按鈕區裡原本的管理員鑰匙 */
-nav #admin-toggle-btn {
+/* =========================================================
+   預覽者模式：兩顆同排
+========================================================= */
+
+body:not(.admin-mode):not(.editor-mode)
+nav .flex.flex-wrap.justify-center.lg\:justify-end.items-center.gap-2\.5 {
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr))
+        !important;
+}
+
+/* 左側：列印 */
+body:not(.admin-mode):not(.editor-mode)
+nav #print-pdf-btn {
+    display: flex;
+
+    grid-column: 1;
+    grid-row: 1;
+
+    order: 1;
+}
+
+/* 右側：載入預覽／退出預覽 */
+body:not(.admin-mode):not(.editor-mode)
+nav #load-json-btn {
+    display: flex;
+
+    grid-column: 2;
+    grid-row: 1;
+
+    order: 2;
+}
+
+/* 預覽者不顯示匯出與權限設定 */
+body:not(.admin-mode):not(.editor-mode)
+nav #export-json-btn,
+body:not(.admin-mode):not(.editor-mode)
+nav #mobile-permission-settings-btn {
     display: none !important;
 }
 
-/* 手機版：隱藏功能按鈕區裡原本的權限設定齒輪 */
-nav #permission-settings-btn {
+/* =========================================================
+   使用者模式：列印、匯出、載入三顆同排
+========================================================= */
+
+body.editor-mode
+nav .flex.flex-wrap.justify-center.lg\:justify-end.items-center.gap-2\.5 {
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr))
+        !important;
+
+    gap: 0.5rem !important;
+}
+
+/* 第一格：列印 */
+body.editor-mode
+nav #print-pdf-btn {
+    display: flex;
+
+    grid-column: 1;
+    grid-row: 1;
+
+    order: 1;
+}
+
+/* 第二格：匯出 */
+body.editor-mode
+nav #export-json-btn {
+    display: flex;
+
+    grid-column: 2;
+    grid-row: 1;
+
+    order: 2;
+}
+
+/* 第三格：載入 */
+body.editor-mode
+nav #load-json-btn {
+    display: flex;
+
+    grid-column: 3;
+    grid-row: 1;
+
+    order: 3;
+}
+
+/* 使用者不顯示權限設定 */
+body.editor-mode
+nav #mobile-permission-settings-btn {
     display: none !important;
 }
 
-/* 手機版：顯示標題區右上角的管理員鑰匙 */
-nav #mobile-admin-toggle-btn {
-    display: inline-flex !important;
-    width: 42px;
-    height: 42px;
-    padding: 0;
+/* 使用者三顆按鈕統一比例 */
+body.editor-mode
+nav #print-pdf-btn,
+body.editor-mode
+nav #export-json-btn,
+body.editor-mode
+nav #load-json-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+
+    padding:
+        0.55rem
+        0.25rem
+        !important;
+
     align-items: center;
     justify-content: center;
+
+    gap: 5px !important;
+
+    font-size: 0.72rem !important;
+    line-height: 1 !important;
+
+    white-space: nowrap;
+    overflow: hidden;
 }
 
-/* 手機版：預覽者與使用者模式不顯示權限設定齒輪 */
-body:not(.admin-mode) nav #mobile-permission-settings-btn {
-    display: none !important;
+/*
+ * 使用者模式只精簡文字。
+ * 圖示種類完全沿用目前程式。
+ */
+
+/* 列印 / PDF → 列印 */
+body.editor-mode
+nav #print-pdf-btn > span {
+    font-size: 0 !important;
 }
 
-/* 手機版：只有管理者模式顯示鎖頭旁的權限設定齒輪 */
-body.admin-mode nav #mobile-permission-settings-btn {
+body.editor-mode
+nav #print-pdf-btn > span::after {
+    content: '列印';
+
+    font-size: 0.72rem;
+    line-height: 1;
+}
+
+/* 匯出資料 → 匯出 */
+body.editor-mode
+nav #export-json-label {
+    font-size: 0 !important;
+}
+
+body.editor-mode
+nav #export-json-label::after {
+    content: '匯出';
+
+    font-size: 0.72rem;
+    line-height: 1;
+}
+
+/* 載入資料 → 載入 */
+body.editor-mode
+nav #load-json-label {
+    font-size: 0 !important;
+}
+
+body.editor-mode
+nav #load-json-label::after {
+    content: '載入';
+
+    font-size: 0.72rem;
+    line-height: 1;
+}
+
+/* =========================================================
+   管理者模式：2欄×2列
+========================================================= */
+
+body.admin-mode
+nav .flex.flex-wrap.justify-center.lg\:justify-end.items-center.gap-2\.5 {
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr))
+        !important;
+
+    gap: 0.65rem !important;
+}
+
+/* 左上：列印 */
+body.admin-mode
+nav #print-pdf-btn {
+    display: flex;
+
+    grid-column: 1;
+    grid-row: 1;
+
+    order: 1;
+}
+
+/* 右上：齒輪＋權限設定 */
+body.admin-mode
+nav #mobile-permission-settings-btn {
     display: inline-flex !important;
-    width: 42px;
-    height: 42px;
-    padding: 0;
+
+    grid-column: 2;
+    grid-row: 1;
+
+    order: 2;
+
+    width: 100% !important;
+    min-width: 0 !important;
+
+    padding:
+        0.6rem
+        0.45rem
+        !important;
+
     align-items: center;
     justify-content: center;
+
+    gap: 6px;
+
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+/* 左下：匯出 */
+body.admin-mode
+nav #export-json-btn {
+    display: flex;
+
+    grid-column: 1;
+    grid-row: 2;
+
+    order: 3;
+}
+
+/* 右下：匯入 */
+body.admin-mode
+nav #load-json-btn {
+    display: flex;
+
+    grid-column: 2;
+    grid-row: 2;
+
+    order: 4;
+}
+
+/* 系統名稱左側彈性縮放，右側固定保留鑰匙按鈕 */
+nav .min-w-0.flex-1 >
+.flex.items-start.justify-between {
+    width: 100%;
+    align-items: flex-start;
+}
+
+nav .min-w-0.flex-1 >
+.flex.items-start.justify-between >
+div:first-child {
+    min-width: 0;
+    flex: 1 1 auto;
 }
 
 /* 手機版：讓標題區左右排列更穩定 */
@@ -1027,6 +1233,42 @@ nav p {
 .edit-toggle-icon-btn:active,
 .save-data-icon-btn:active {
     transform: scale(0.95);
+}
+
+/* 極窄手機仍維持使用者三顆同排 */
+@media screen
+and (orientation: portrait)
+and (max-width: 374px) {
+
+    body.editor-mode
+    nav .flex.flex-wrap.justify-center.lg\:justify-end.items-center.gap-2\.5 {
+        gap: 0.35rem !important;
+    }
+
+    body.editor-mode
+    nav #print-pdf-btn,
+    body.editor-mode
+    nav #export-json-btn,
+    body.editor-mode
+    nav #load-json-btn {
+        min-height: 40px;
+
+        padding:
+            0.5rem
+            0.12rem
+            !important;
+
+        gap: 3px !important;
+    }
+
+    body.editor-mode
+    nav #print-pdf-btn > span::after,
+    body.editor-mode
+    nav #export-json-label::after,
+    body.editor-mode
+    nav #load-json-label::after {
+        font-size: 0.68rem;
+    }
 }
 
 /* =========================================================
@@ -1768,16 +2010,38 @@ table.osra-table textarea::placeholder {
         <i class="fa-solid fa-shield-halved text-2xl text-yellow-300"></i>
     </div>
 
-    <div class="min-w-0 flex-1">
-        <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-                <h1 class="text-2xl font-bold tracking-wide flex items-center gap-2">
-                    職業安全風險評估系統
-                </h1>
-                <p class="text-slate-400 text-sm font-mono">OCCUPATIONAL SAFETY RISK ASSESSMENT SYSTEM</p>
-            </div>
+<div class="min-w-0 flex-1">
+    <div class="flex items-start justify-between gap-3">
+
+        <div class="min-w-0 flex-1">
+            <h1
+                class="text-2xl font-bold tracking-wide flex items-center gap-2"
+            >
+                職業安全風險評估系統
+            </h1>
+
+            <p class="text-slate-400 text-sm font-mono">
+                OCCUPATIONAL SAFETY RISK ASSESSMENT SYSTEM
+            </p>
         </div>
+
+        <!-- 手機直式：權限登入／登出固定於標題右側 -->
+        <button
+            id="mobile-admin-toggle-btn"
+            type="button"
+            onclick="toggleAdmin()"
+            class="mobile-admin-key-btn hidden bg-slate-800 hover:bg-slate-700 text-yellow-500 hover:text-yellow-400 rounded-lg text-sm font-medium transition items-center justify-center border border-slate-700 shrink-0"
+            title="權限登入"
+            aria-label="權限登入"
+        >
+            <i
+                id="mobile-admin-key-icon"
+                class="fa-solid fa-key"
+            ></i>
+        </button>
+
     </div>
+</div>
 </div>
             
             <!-- 導航功能按鈕組：簡潔精緻單排按鈕群 -->
@@ -1793,36 +2057,18 @@ table.osra-table textarea::placeholder {
     <span>列印 / PDF</span>
 </button>
 
-<!-- 手機直式第一排右側：登入／登出與權限設定 -->
-<div
-    id="mobile-auth-actions"
-    class="hidden items-center justify-center gap-2 min-w-0"
+<!-- 手機直式：僅管理者顯示 -->
+<button
+    id="mobile-permission-settings-btn"
+    type="button"
+    onclick="openPermissionSettingsModal()"
+    class="hidden bg-slate-700 hover:bg-slate-600 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium transition items-center justify-center gap-1.5 shadow-sm"
+    title="權限與密碼設定"
+    aria-label="權限與密碼設定"
 >
-    <button
-        id="mobile-admin-toggle-btn"
-        type="button"
-        onclick="toggleAdmin()"
-        class="mobile-admin-key-btn hidden bg-slate-800 hover:bg-slate-700 text-yellow-500 hover:text-yellow-400 rounded-lg text-sm font-medium transition items-center justify-center border border-slate-700 shrink-0"
-        title="權限登入"
-        aria-label="權限登入"
-    >
-        <i
-            id="mobile-admin-key-icon"
-            class="fa-solid fa-key"
-        ></i>
-    </button>
-
-    <button
-        id="mobile-permission-settings-btn"
-        type="button"
-        onclick="openPermissionSettingsModal()"
-        class="hidden bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-cyan-300 rounded-lg text-sm font-medium transition items-center justify-center border border-cyan-700 shrink-0"
-        title="權限與密碼設定"
-        aria-label="權限與密碼設定"
-    >
-        <i class="fa-solid fa-gear"></i>
-    </button>
-</div>
+    <i class="fa-solid fa-gear text-cyan-300"></i>
+    <span>權限設定</span>
+</button>
 
 <button id="export-json-btn"
         onclick="exportToJson()"
@@ -5351,6 +5597,19 @@ updateRiskEditModeControls();
 document.body.classList.toggle(
     'admin-mode',
     isAdminAuthenticated
+);
+
+/*
+ * 使用者模式專用識別。
+ *
+ * 管理者登入時，
+ * isEditorAuthenticated 也可能是 true，
+ * 所以必須排除管理者。
+ */
+document.body.classList.toggle(
+    'editor-mode',
+    isEditorAuthenticated &&
+    !isAdminAuthenticated
 );
 
 /*
