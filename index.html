@@ -1866,6 +1866,13 @@ span:first-child {
     cursor: default !important;
 }
 
+/* 特殊作業資格／證照欄位 */
+.special-qualification-col {
+    width: 112px;
+    min-width: 112px;
+    max-width: 112px;
+}
+
         /* 列印專用樣式 */
         @media print {
 @page {
@@ -2384,9 +2391,10 @@ table.osra-table textarea::placeholder {
                                     <th class="bg-section-2-1 w-24">作業環境</th>
                                     <th class="bg-section-2-1 w-24">機械/設備</th>
                                     <th class="bg-section-2-1 w-24">能源/化學品</th>
-                                    <th class="bg-section-2-1 w-28">
-    特殊作業<br>
-    資格／證照
+<th
+    class="bg-section-2-1 special-qualification-col whitespace-nowrap"
+>
+    特殊作業資格／證照
 </th>
                                     <!-- 危害 -->
                                     <th class="bg-section-2-2 w-28">危害類型</th>
@@ -3959,14 +3967,37 @@ if (!skipSave) {
                 <td class="p-1"><textarea id="chem-${rowId}" onchange="updateRowState(${rowId})" class="w-full bg-transparent border-0 p-1 resize-none" rows="2" placeholder="無"></textarea></td>
                 
                 <!-- 證照檢驗 -->
-                <td class="p-2 text-center bg-slate-50">
-                    <div class="flex flex-col items-center gap-1">
-                        <label class="inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="qual-checked-${rowId}" onchange="updateRowState(${rowId})" class="rounded text-indigo-600 focus:ring-indigo-500 h-3 w-3">
-                            <span class="ml-1 text-[10px] font-bold text-slate-700">法定資格證照</span>
-                        </label>
-                        <input type="text" id="qual-desc-${rowId}" onchange="updateRowState(${rowId})" placeholder="如：起重機吊掛證" class="w-full bg-white border border-slate-200 rounded text-[9px] text-center py-0.5 px-1 focus:outline-none">
-                    </div>
+                <td
+    class="special-qualification-col p-1.5 text-center bg-slate-50"
+>
+<div class="flex flex-col items-stretch gap-1">
+
+    <label
+        class="flex w-full items-center justify-start cursor-pointer"
+    >
+        <input
+            type="checkbox"
+            id="qual-checked-${rowId}"
+            onchange="updateRowState(${rowId})"
+            class="rounded text-indigo-600 focus:ring-indigo-500 h-3 w-3 shrink-0"
+        >
+
+        <span
+            class="ml-1 text-[10px] font-bold text-slate-700 whitespace-nowrap"
+        >
+            法定資格證照
+        </span>
+    </label>
+
+<input
+    type="text"
+    id="qual-desc-${rowId}"
+    onchange="updateRowState(${rowId})"
+    placeholder="如：起重機吊掛證"
+    class="w-full bg-white border border-slate-200 rounded text-[9px] text-left py-0.5 px-1.5 focus:outline-none"
+>
+
+</div>
                 </td>
 
                 <!-- 危害類型與事故情境 -->
