@@ -2372,16 +2372,16 @@ table.osra-table textarea::placeholder {
         </button>
 
         <!-- 2. 新增評估項次 -->
-        <button
-            id="add-row-btn"
-            type="button"
-            onclick="addNewRow()"
-            class="admin-edit-block matrix-add-icon-btn"
-            title="新增評估項次"
-            aria-label="新增評估項次"
-        >
-            <i class="fa-solid fa-plus"></i>
-        </button>
+<button
+    id="add-row-btn"
+    type="button"
+    onclick="handleAddEvaluationRowClick()"
+    class="admin-edit-block matrix-add-icon-btn"
+    title="新增評估項次"
+    aria-label="新增評估項次"
+>
+    <i class="fa-solid fa-plus"></i>
+</button>
 
         <!-- 3. 編輯／檢視 -->
         <button
@@ -4321,6 +4321,87 @@ function deleteTab(sheetId) {
         // ----------------------------------------------------
         // E. 表格核心 DOM 增刪與渲染
         // ----------------------------------------------------
+     
+/* =========================================================
+   新增評估項次按鈕
+   管理者與使用者模式皆先顯示確認訊息
+========================================================= */
+function handleAddEvaluationRowClick() {
+    /*
+     * 未登入管理者或使用者時阻擋。
+     */
+    if (!canEditData()) {
+        showToast(
+            '請先登入使用者或管理者權限。',
+            'warning'
+        );
+
+        openAdminModal();
+        return;
+    }
+
+    /*
+     * 已登入，但尚未進入矩陣編輯模式時阻擋。
+     */
+    if (!canEditRiskMatrixNow()) {
+        showToast(
+            '請先點擊編輯按鈕進入編輯模式。',
+            'warning'
+        );
+
+        return;
+    }
+
+    /*
+     * 取得目前登入身分。
+     */
+    const roleName =
+        getCurrentRole() === 'admin'
+            ? '管理者'
+            : '使用者';
+
+    /*
+     * 取得即將新增的畫面項次。
+     */
+    const currentRowCount =
+        document.querySelectorAll(
+            '#tableBody tr'
+        ).length;
+
+    const nextItemNo =
+        currentRowCount + 1;
+
+    /*
+     * 新增前確認訊息。
+     */
+const confirmed =
+    confirm(
+        `確定新增評估項次 ${nextItemNo}？`
+    );
+
+    if (!confirmed) {
+        showToast(
+            '已取消新增評估項次。',
+            'info'
+        );
+
+        return;
+    }
+
+    /*
+     * 確認後執行原本的新增函式。
+     */
+    addNewRow();
+
+    /*
+     * 新增完成後顯示右下角通知。
+     */
+    showToast(
+        `已新增評估項次 ${nextItemNo}`,
+        'success'
+    );
+}        
+        
         function addNewRow(initialData = null, customId = null, skipSave = false) {
 if (!skipSave) {
     if (!canEditData()) {
@@ -4678,9 +4759,7 @@ async function deleteRow(rowId) {
      */
     const confirmed =
         confirm(
-            `確定要刪除評估項次 ${itemNo}「${jobTitle}」嗎？` +
-            attachmentMessage +
-            '\n\n刪除後將無法復原。'
+            `確定要刪除評估項次 ${itemNo}「${jobTitle}」嗎？`
         );
 
     if (!confirmed) {
@@ -4751,7 +4830,7 @@ await syncWorkbook();
     
 if (showNotification) {
     showToast(
-        '評估明細已成功儲存！如需檢查風險邏輯，請點選執行 AI 稽核。',
+        '風險評估矩陣表已成功儲存！',
         'success'
     );
 }
@@ -5218,7 +5297,7 @@ function closeBulkImportModalOutside(event) {
                 }
             }
 
-showToast(`🎉 整批生成完成！已成功建置 ${tasks.length} 筆完整風險評估明細。如需檢查，請手動點選 執行 AI 稽核。`, "success");
+showToast(`🎉 整批生成完成！已成功建置 ${tasks.length} 筆完整風險評估明細。`, "success");
         }
 
         // ----------------------------------------------------
