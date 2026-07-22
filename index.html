@@ -1873,6 +1873,73 @@ span:first-child {
     max-width: 112px;
 }
 
+/* =========================================================
+   訓練項目輸入框
+   預設單行、最多自動展開兩行，超過後垂直捲動
+========================================================= */
+.qualification-auto-textarea {
+    display: block;
+    box-sizing: border-box;
+
+    width: 100%;
+
+    /*
+     * 單行高度：
+     * 14px 行高＋上下各 3px＋上下邊框約 2px
+     */
+    height: 22px;
+    min-height: 22px;
+    max-height: 36px;
+
+    padding: 3px 6px;
+
+    font-size: 9px;
+    line-height: 14px;
+
+    text-align: left;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+
+    resize: none;
+    overflow-x: hidden;
+    overflow-y: hidden;
+
+    scrollbar-width: thin;
+}
+
+/* Chrome、Edge、Safari 捲動條 */
+.qualification-auto-textarea::-webkit-scrollbar {
+    width: 5px;
+}
+
+.qualification-auto-textarea::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.qualification-auto-textarea::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+}
+
+/*
+ * 手機版維持 16px 輸入字體，
+ * 避免 Safari 點擊時自動放大。
+ */
+@media screen and (max-width: 950px),
+       (hover: none) and (pointer: coarse) {
+
+    .qualification-auto-textarea {
+        min-height: 32px;
+        max-height: 56px;
+
+        padding-top: 4px;
+        padding-bottom: 4px;
+
+        font-size: 16px !important;
+        line-height: 22px !important;
+    }
+}
+
         /* 列印專用樣式 */
         @media print {
 @page {
@@ -2045,6 +2112,28 @@ table.osra-table textarea::placeholder {
         font-size: 10px !important;
         color: #0f172a !important;
     }
+
+    /* 特殊作業資格／證照：列印時訓練項目全部靠左 */
+.special-qualification-col
+.print-textarea-content {
+    display: block !important;
+    width: 100% !important;
+    align-self: stretch !important;
+    box-sizing: border-box !important;
+
+    text-align: left !important;
+    text-indent: 0 !important;
+
+    /*
+     * 對齊畫面中白色輸入框的文字內距
+     */
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+}
 
     textarea.print-hidden-for-output {
         display: none !important;
@@ -3003,32 +3092,347 @@ class="group relative overflow-visible
         // ----------------------------------------------------
         // 全域 ResizeObserver：監聽 textarea 高度變化並同步整列
         // ----------------------------------------------------
-        const rowSyncObserver = new ResizeObserver(entries => {
-            // 加入 requestAnimationFrame 確保畫面渲染順暢，並消除 ResizeObserver 迴圈錯誤警告
-            window.requestAnimationFrame(() => {
-                for (let entry of entries) {
-                    const target = entry.target;
-                    // 利用 dataset 標記避免觸發無限同步迴圈
-                    if (target.dataset.syncing === 'true') continue;
+        
+/* =========================================================
+   訓練項目輸入框：依文字內容自動調整高度
+========================================================= */
+/* =========================================================
+   取得訓練項目輸入框的單行與兩行高度
+========================================================= */
+function getQualificationTextareaLimits(element) {
+    const computedStyle =
+        window.getComputedStyle(element);
 
-                    const row = target.closest('tr');
-                    if (!row) continue;
+    const minimumHeight =
+        parseFloat(
+            computedStyle.minHeight
+        ) || 22;
 
-                    const newHeight = target.offsetHeight + 'px';
-                    const textareas = row.querySelectorAll('textarea');
-                    
-                    textareas.forEach(ta => {
-                        // 將同列其他高度不同的 textarea 進行同步
-                        if (ta !== target && ta.style.height !== newHeight) {
-                            ta.dataset.syncing = 'true';
-                            ta.style.height = newHeight;
-                            // 設定微小延遲解除鎖定，確保文字內容跟隨高度釋放
-                            setTimeout(() => { delete ta.dataset.syncing; }, 50);
-                        }
-                    });
+    const maximumHeight =
+        parseFloat(
+            computedStyle.maxHeight
+        ) || 36;
+
+    return {
+        minimumHeight,
+        maximumHeight
+    };
+}
+
+
+/* =========================================================
+   訓練項目輸入框：
+   單行起始、最多自動展開兩行，超過後垂直捲動
+========================================================= */
+function autoResizeQualificationTextarea(element) {
+    if (!element) {
+        return;
+    }
+
+    /*
+     * 若已經透過其他主控欄位手動釋放高度，
+     * 輸入文字時保留目前手動設定的高度。
+     */
+    if (
+        element.dataset.rowHeightReleased ===
+        'true'
+    ) {
+        element.style.overflowY =
+            element.scrollHeight >
+            element.clientHeight + 1
+                ? 'auto'
+                : 'hidden';
+
+        return;
+    }
+
+    const {
+        minimumHeight,
+        maximumHeight
+    } =
+        getQualificationTextareaLimits(
+            element
+        );
+
+    /*
+     * 先縮回單行，才能重新正確計算內容高度。
+     */
+    element.style.height =
+        `${minimumHeight}px`;
+
+    const requiredHeight =
+        element.value.trim()
+            ? element.scrollHeight
+            : minimumHeight;
+
+    /*
+     * 自動高度最多只到兩行。
+     */
+    const nextHeight =
+        Math.min(
+            Math.max(
+                requiredHeight,
+                minimumHeight
+            ),
+            maximumHeight
+        );
+
+    element.style.height =
+        `${nextHeight}px`;
+
+    /*
+     * 超過兩行時顯示右側垂直捲動條。
+     */
+    element.style.overflowY =
+        requiredHeight >
+        maximumHeight + 1
+            ? 'auto'
+            : 'hidden';
+}
+
+
+/* =========================================================
+   依主控欄位高度同步釋放訓練項目白框
+========================================================= */
+function syncQualificationHeightFromMaster(
+    masterTextarea
+) {
+    if (!masterTextarea) {
+        return;
+    }
+
+    const row =
+        masterTextarea.closest('tr');
+
+    if (!row) {
+        return;
+    }
+
+    const qualificationTextarea =
+        row.querySelector(
+            '.qualification-auto-textarea'
+        );
+
+    if (!qualificationTextarea) {
+        return;
+    }
+
+    const qualificationWrapper =
+        qualificationTextarea.parentElement;
+
+    const qualificationLabel =
+        qualificationWrapper
+            ?.querySelector('label');
+
+    const wrapperStyle =
+        qualificationWrapper
+            ? window.getComputedStyle(
+                qualificationWrapper
+            )
+            : null;
+
+    const wrapperGap =
+        parseFloat(
+            wrapperStyle?.rowGap
+        ) || 4;
+
+    const labelHeight =
+        qualificationLabel
+            ?.offsetHeight || 0;
+
+    const {
+        minimumHeight
+    } =
+        getQualificationTextareaLimits(
+            qualificationTextarea
+        );
+
+    /*
+     * 扣除上方「法定資格證照」勾選列高度，
+     * 避免訓練項目框反過來把整列再次撐高。
+     */
+    const availableHeight =
+        Math.max(
+            minimumHeight,
+            Math.round(
+                masterTextarea.offsetHeight -
+                labelHeight -
+                wrapperGap
+            )
+        );
+
+    qualificationTextarea.dataset
+        .rowHeightReleased =
+        'true';
+
+    qualificationTextarea.style.maxHeight =
+        `${availableHeight}px`;
+
+    qualificationTextarea.style.height =
+        `${availableHeight}px`;
+
+    qualificationTextarea.style.overflowY =
+        qualificationTextarea.scrollHeight >
+        availableHeight + 1
+            ? 'auto'
+            : 'hidden';
+}        
+
+/* =========================================================
+   記錄目前正在手動調整高度的主控欄位
+========================================================= */
+let activeRowHeightMaster = null;
+
+
+/*
+ * 按下作業名稱、事故情境或改善策略的高度調整柄時，
+ * 記錄開始高度。
+ */
+document.addEventListener(
+    'pointerdown',
+    event => {
+        const masterTextarea =
+            event.target.closest?.(
+                'textarea.row-height-master'
+            );
+
+        if (!masterTextarea) {
+            return;
+        }
+
+        activeRowHeightMaster = {
+            element:
+                masterTextarea,
+
+            startHeight:
+                masterTextarea.offsetHeight
+        };
+    }
+);
+
+
+/*
+ * 放開滑鼠或手指後，完成最後一次高度同步。
+ */
+function finishRowHeightMasterResize() {
+    if (!activeRowHeightMaster) {
+        return;
+    }
+
+    const {
+        element,
+        startHeight
+    } =
+        activeRowHeightMaster;
+
+    const heightChanged =
+        Math.abs(
+            element.offsetHeight -
+            startHeight
+        ) > 1;
+
+    if (heightChanged) {
+        syncQualificationHeightFromMaster(
+            element
+        );
+    }
+
+    activeRowHeightMaster = null;
+}
+
+
+document.addEventListener(
+    'pointerup',
+    finishRowHeightMasterResize
+);
+
+document.addEventListener(
+    'pointercancel',
+    finishRowHeightMasterResize
+);
+
+const rowSyncObserver =
+    new ResizeObserver(entries => {
+
+        window.requestAnimationFrame(() => {
+
+            for (const entry of entries) {
+                const target =
+                    entry.target;
+
+                if (
+                    target.dataset.syncing ===
+                    'true'
+                ) {
+                    continue;
                 }
-            });
+
+                const row =
+                    target.closest('tr');
+
+                if (!row) {
+                    continue;
+                }
+
+                const newHeight =
+                    `${target.offsetHeight}px`;
+
+                /*
+                 * 原本的一般文字欄位繼續同步高度。
+                 * 訓練項目仍先排除，避免平常直接被撐高。
+                 */
+                const normalTextareas =
+                    row.querySelectorAll(
+                        'textarea:not(.qualification-auto-textarea)'
+                    );
+
+                normalTextareas.forEach(
+                    textarea => {
+                        if (
+                            textarea === target ||
+                            textarea.style.height ===
+                            newHeight
+                        ) {
+                            return;
+                        }
+
+                        textarea.dataset.syncing =
+                            'true';
+
+                        textarea.style.height =
+                            newHeight;
+
+                        setTimeout(() => {
+                            delete textarea.dataset
+                                .syncing;
+                        }, 50);
+                    }
+                );
+
+                /*
+                 * 只有使用者正在拖曳指定的三個主控欄位時，
+                 * 才同步釋放訓練項目白框。
+                 */
+                const isActiveMaster =
+                    activeRowHeightMaster
+                        ?.element === target;
+
+                const heightActuallyChanged =
+                    isActiveMaster &&
+                    Math.abs(
+                        target.offsetHeight -
+                        activeRowHeightMaster
+                            .startHeight
+                    ) > 1;
+
+                if (heightActuallyChanged) {
+                    syncQualificationHeightFromMaster(
+                        target
+                    );
+                }
+            }
         });
+    });
 
         // ----------------------------------------------------
         // IndexedDB 資料庫介接模組 (Local Persistent Adapter)
@@ -3953,7 +4357,16 @@ if (!skipSave) {
 <td class="sticky-item-col bg-slate-50 text-center font-bold font-mono text-slate-500"></td>
 <td class="sticky-title-col p-2 relative group">
                     <div class="flex items-center gap-1">
-                        <textarea id="title-${rowId}" onchange="updateRowState(${rowId})" class="w-full bg-transparent border-0 focus:ring-1 focus:ring-indigo-500 rounded p-1 text-[11px] font-medium placeholder-slate-400" placeholder="輸入作業，例如:高架起重吊掛..."></textarea>
+                        <textarea
+    id="title-${rowId}"
+    onchange="updateRowState(${rowId})"
+    class="row-height-master resize-y
+           w-full bg-transparent border-0
+           focus:ring-1 focus:ring-indigo-500
+           rounded p-1 text-[11px] font-medium
+           placeholder-slate-400"
+    placeholder="輸入作業，例如:高架起重吊掛..."
+></textarea>
                         <button onclick="triggerRowAi(${rowId})" title="AI智慧自動完成" class="admin-edit-block ai-pulse-btn text-amber-500 hover:text-amber-600 bg-amber-50 hover:bg-amber-100 p-1 rounded border border-amber-200 transition">
                             <i class="fa-solid fa-wand-magic-sparkles"></i>
                         </button>
@@ -3989,20 +4402,34 @@ if (!skipSave) {
         </span>
     </label>
 
-<input
-    type="text"
+<textarea
     id="qual-desc-${rowId}"
+    rows="1"
+    oninput="autoResizeQualificationTextarea(this)"
     onchange="updateRowState(${rowId})"
-    placeholder="如：起重機吊掛證"
-    class="w-full bg-white border border-slate-200 rounded text-[9px] text-left py-0.5 px-1.5 focus:outline-none"
->
+    placeholder="輸入訓練項目"
+    class="qualification-auto-textarea
+           bg-white
+           border border-slate-200
+           rounded
+           text-slate-700
+           focus:outline-none"
+></textarea>
 
 </div>
                 </td>
 
                 <!-- 危害類型與事故情境 -->
                 <td class="p-1"><textarea id="hazard-type-${rowId}" onchange="updateRowState(${rowId})" class="w-full bg-transparent border-0 text-center p-1 resize-none" rows="3" placeholder="被撞/墜落"></textarea></td>
-                <td class="p-1"><textarea id="scenario-${rowId}" onchange="updateRowState(${rowId})" class="w-full bg-transparent border-0 p-1 text-left" rows="3" placeholder="人員於...不慎...導致..."></textarea></td>
+                <td class="p-1"><textarea
+    id="scenario-${rowId}"
+    onchange="updateRowState(${rowId})"
+    class="row-height-master resize-y
+           w-full bg-transparent border-0
+           p-1 text-left"
+    rows="3"
+    placeholder="人員於...不慎...導致..."
+></textarea>
                 
                 <!-- 3. 現有防護措施 -->
                 <td class="p-1"><textarea id="ext-eng-${rowId}" onchange="updateRowState(${rowId})" class="w-full bg-transparent border-0 p-1 resize-none" rows="2" placeholder="防爆擋板"></textarea></td>
@@ -4045,7 +4472,15 @@ class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
                 <!-- 5. 降低風險採取之控制措施 -->
                 <td class="p-1 bg-rose-50 relative group">
                     <div class="flex gap-1 items-start h-full">
-                        <textarea id="ctrl-proposal-${rowId}" onchange="updateRowState(${rowId})" class="w-full bg-transparent border-0 p-1 text-left text-[10px]" rows="3" placeholder="點擊 ✨ 生成 Hierarchy of Controls 標準控制防護提案..."></textarea>
+                        <textarea
+    id="ctrl-proposal-${rowId}"
+    onchange="updateRowState(${rowId})"
+    class="row-height-master resize-y
+           w-full bg-transparent border-0
+           p-1 text-left text-[10px]"
+    rows="3"
+    placeholder="點擊 ✨ 生成 Hierarchy of Controls 標準控制防護提案..."
+></textarea>
                         <div class="flex flex-col gap-1 mt-1">
                             <button onclick="triggerControlAi(${rowId})" title="AI 控制層級優化建議" class="admin-edit-block text-indigo-600 hover:text-indigo-700 bg-indigo-50 p-1 rounded border border-indigo-200 transition items-center justify-center">
                                 <i class="fa-solid fa-shield-halved"></i>
@@ -4106,8 +4541,14 @@ class="w-10 bg-white border border-slate-200 rounded text-center font-bold">
             tbody.appendChild(tr);
 
             // 將新產生的所有 textarea 綁定高度同步監聽器
-            const textareas = tr.querySelectorAll('textarea');
-            textareas.forEach(ta => rowSyncObserver.observe(ta));
+const textareas =
+    tr.querySelectorAll(
+        'textarea:not(.qualification-auto-textarea)'
+    );
+
+textareas.forEach(
+    ta => rowSyncObserver.observe(ta)
+);
 
             if (initialData) {
                 populateRowData(rowId, initialData);
@@ -4143,7 +4584,19 @@ updateDashboardStats();
             document.getElementById(`mach-${rowId}`).value = data.machinery || '';
             document.getElementById(`chem-${rowId}`).value = data.chemical || '';
             document.getElementById(`qual-checked-${rowId}`).checked = data.qualification?.checked || false;
-            document.getElementById(`qual-desc-${rowId}`).value = data.qualification?.license || '';
+            const qualificationTextarea =
+    document.getElementById(
+        `qual-desc-${rowId}`
+    );
+
+qualificationTextarea.value =
+    data.qualification?.license || '';
+
+requestAnimationFrame(() => {
+    autoResizeQualificationTextarea(
+        qualificationTextarea
+    );
+});
             document.getElementById(`hazard-type-${rowId}`).value = data.hazard_type || '';
             document.getElementById(`scenario-${rowId}`).value = data.scenario || '';
             document.getElementById(`ext-eng-${rowId}`).value = data.existing_eng || '';
