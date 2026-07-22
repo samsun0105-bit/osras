@@ -1809,6 +1809,63 @@ div:nth-child(4) {
     text-align: center;
 }
 
+/* =========================================================
+   AI 稽核按鈕－未登入或沒有評估項次時的鎖定狀態
+========================================================= */
+
+/*
+ * 不使用 disabled 屬性，
+ * 因為仍需要接受點擊並顯示原因通知。
+ */
+#aiAuditBtn.ai-audit-locked,
+#aiAuditBtn.ai-audit-locked:hover,
+#aiAuditBtn.ai-audit-locked:active {
+    background-image:
+        linear-gradient(
+            to right,
+            #64748b,
+            #475569
+        ) !important;
+
+    box-shadow: none !important;
+    transform: none !important;
+    filter: none !important;
+
+    /*
+     * 維持一般箭頭游標，
+     * 不顯示手指或禁止符號。
+     */
+    cursor: default !important;
+
+    /*
+     * 移入時完全沒有動畫反應。
+     */
+    transition: none !important;
+}
+
+/* 鎖定時主圖示與文字稍微柔化 */
+#aiAuditBtn.ai-audit-locked
+#aiAuditBtnContent {
+    opacity: 0.78;
+}
+
+/* 鎖定時右上角 AI 小標籤同步柔化 */
+#aiAuditBtn.ai-audit-locked >
+span:first-child {
+    background: #cbd5e1 !important;
+    border-color: #94a3b8 !important;
+    color: #475569 !important;
+    box-shadow: none !important;
+}
+
+/*
+ * 避免游標移到按鈕內部圖示或文字時，
+ * 產生不同的游標狀態。
+ */
+#aiAuditBtn.ai-audit-locked * {
+    cursor: default !important;
+}
+
         /* 列印專用樣式 */
         @media print {
 @page {
@@ -2327,7 +2384,10 @@ table.osra-table textarea::placeholder {
                                     <th class="bg-section-2-1 w-24">作業環境</th>
                                     <th class="bg-section-2-1 w-24">機械/設備</th>
                                     <th class="bg-section-2-1 w-24">能源/化學品</th>
-                                    <th class="bg-section-2-1 w-28">特殊作業資格 / 證照</th>
+                                    <th class="bg-section-2-1 w-28">
+    特殊作業<br>
+    資格／證照
+</th>
                                     <!-- 危害 -->
                                     <th class="bg-section-2-2 w-28">危害類型</th>
                                     <th class="bg-section-2-2 min-w-[250px]">事故可能造成之情境描述 (符合勞檢標準)</th>
@@ -2630,7 +2690,7 @@ class="group relative overflow-visible
                 </button>
 
                 <p class="text-[10px] text-center text-slate-400 leading-relaxed">
-                    未登入狀態僅提供預覽、列印、PDF 與 AI 稽核等功能。
+                    未登入狀態僅提供預覽、列印與 PDF 等功能。
                 </p>
             </div>
 
@@ -2925,7 +2985,10 @@ class="group relative overflow-visible
 </div>
 
     <!-- 自訂輕提示 Toast Container -->
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+    <div
+    id="toast-container"
+    class="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2 max-w-[calc(100vw-2rem)]"
+></div>
 
     <!-- JavaScript 核心功能邏輯 -->
     <script>
@@ -4182,7 +4245,9 @@ async function deleteRow(rowId) {
         // ----------------------------------------------------
         // 手動安全儲存所有評估記錄
         // ----------------------------------------------------
-async function manualSaveRecords() {
+async function manualSaveRecords(
+    showNotification = true
+) {
     if (!canEditData()) {
     showToast("請先登入使用者或管理者權限後再儲存。", "warning");
     openAdminModal();
@@ -4200,8 +4265,14 @@ rows.forEach(row => {
 saveSheetMetaToActiveSheet();
 await syncWorkbook();
     
-    showToast("評估明細已成功儲存！如需檢查風險邏輯，請點選 執行 AI 稽核。", "success");
-    updateDashboardStats();
+if (showNotification) {
+    showToast(
+        '評估明細已成功儲存！如需檢查風險邏輯，請點選執行 AI 稽核。',
+        'success'
+    );
+}
+
+updateDashboardStats();
 }
 
         function reindexRows() {
@@ -4731,14 +4802,146 @@ function markAuditAsOutdatedForCurrentSheet() {
     syncWorkbook();
 }
 
-        async function runAiAudit() {
-    const btn = document.getElementById("aiAuditBtn");
-    const btnContent = document.getElementById("aiAuditBtnContent");
+/* =========================================================
+   AI 稽核執行權限與按鈕狀態
+========================================================= */
+
+/*
+ * AI 稽核開放條件：
+ *
+ * 1. 已登入管理者或使用者權限。
+ * 2. 目前分頁至少有一筆評估項次。
+ */
+function canRunAiAudit() {
+    const rowCount =
+        document.querySelectorAll(
+            '#tableBody tr'
+        ).length;
+
+    return (
+        canEditData() &&
+        rowCount > 0
+    );
+}
+
+/*
+ * 依目前權限及表格項次數，
+ * 更新 AI 稽核按鈕的視覺狀態。
+ *
+ * 注意：
+ * 不設定 button.disabled，
+ * 因為鎖定狀態仍要允許點擊顯示提示。
+ */
+function updateAiAuditButtonState() {
+    const btn =
+        document.getElementById(
+            'aiAuditBtn'
+        );
+
+    if (!btn) {
+        return;
+    }
+
+    const rowCount =
+        document.querySelectorAll(
+            '#tableBody tr'
+        ).length;
+
+    const hasPermission =
+        canEditData();
+
+    const hasRows =
+        rowCount > 0;
+
+    const isAvailable =
+        hasPermission &&
+        hasRows;
+
+    btn.classList.toggle(
+        'ai-audit-locked',
+        !isAvailable
+    );
+
+    /*
+     * 提供輔助工具目前狀態，
+     * 但不使用原生 disabled。
+     */
+    btn.setAttribute(
+        'aria-disabled',
+        String(!isAvailable)
+    );
+
+    /*
+     * 預覽者及無資料狀態不顯示瀏覽器 tooltip，
+     * 避免游標移入時出現額外反應。
+     */
+    if (!hasPermission) {
+        btn.removeAttribute(
+            'title'
+        );
+    } else if (!hasRows) {
+        btn.removeAttribute(
+            'title'
+        );
+    } else {
+        btn.title =
+            '執行 AI 風險評估稽核';
+    }
+}
+
+async function runAiAudit() {
+    const btn =
+        document.getElementById(
+            'aiAuditBtn'
+        );
+
+    const btnContent =
+        document.getElementById(
+            'aiAuditBtnContent'
+        );
 
     let auditLoadingTimer = null;
     let auditPanelTimer = null;
 
-    if (btn && btn.disabled) return;
+    /* =============================================
+       第一層：登入權限檢查
+    ============================================= */
+    if (!canEditData()) {
+        showToast(
+            '請先登入管理者或使用者權限後再使用 AI 稽核。',
+            'error'
+        );
+
+        return;
+    }
+
+    /* =============================================
+       第二層：目前分頁項次數檢查
+    ============================================= */
+    const currentRowCount =
+        document.querySelectorAll(
+            '#tableBody tr'
+        ).length;
+
+    if (currentRowCount === 0) {
+        showToast(
+            '請先新增至少一筆危害鑑別與風險評估項次後再使用 AI 稽核。',
+            'warning'
+        );
+
+        return;
+    }
+
+    /*
+     * 已經正在執行稽核時，
+     * 阻止再次觸發。
+     */
+    if (
+        btn &&
+        btn.disabled
+    ) {
+        return;
+    }
 
     function resetAiAuditButton() {
         if (!btn || !btnContent) return;
@@ -4750,6 +4953,10 @@ function markAuditAsOutdatedForCurrentSheet() {
             <i class="fa-solid fa-shield-halved text-white"></i>
             <span>執行 AI 稽核</span>
         `;
+        /*
+ * 稽核完成後重新依角色與項次數判斷。
+ */
+updateAiAuditButtonState();
     }
 
     try {
@@ -5204,6 +5411,11 @@ const targetRate = total > 0
     : 0;
 
             document.getElementById('stat-safety-rate').innerText = `${targetRate}%`;
+            /*
+ * 表格項次數改變後，
+ * 同步更新 AI 稽核可用狀態。
+ */
+updateAiAuditButtonState();
         }
 
         // ----------------------------------------------------
@@ -5220,16 +5432,20 @@ async function toggleAdmin() {
                 '是否儲存並登出系統？'
             )
         ) {
-            await manualSaveRecords();
+            /*
+ * 登出流程會在後面顯示整合通知，
+ * 所以這裡不另外顯示儲存完成訊息。
+ */
+await manualSaveRecords(false);
 
             lockAdmin();
             closeAdminModal();
             closePermissionSettingsModal();
 
-            showToast(
-                '已儲存並登出系統。',
-                'info'
-            );
+showToast(
+    '已儲存並登出系統。',
+    'success'
+);
         }
 
         return;
@@ -5718,6 +5934,12 @@ if (mobileIcon) mobileIcon.className = "fa-solid fa-unlock-keyhole text-emerald-
 applyRiskMatrixReadOnlyState();
 
 updateJsonActionButtons();
+
+/*
+ * 登入、登出或角色變更後，
+ * 同步更新 AI 稽核按鈕。
+ */
+updateAiAuditButtonState();
 }
 
 async function verifyAdminPassword() {
